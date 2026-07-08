@@ -1,0 +1,8 @@
+[build]
+  publish = "."
+
+# always revalidate the data files so a fresh publish shows immediately
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "no-cache"
