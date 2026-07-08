@@ -3,158 +3,182 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OneFootball Heads — Stats</title>
+<title>OneFootball Heads — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #898781;
-    --grid: #2c2c2a;
-    --baseline: #383835;
-    --border: rgba(255,255,255,0.10);
-    --giphy-a: #a985ff;   /* line gradient start */
-    --giphy-b: #ff6eb4;   /* line gradient end */
-    --klipy: #2bd889;
-    --up: #0ca30c;
-    --down: #e66767;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--page); color: var(--ink);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    padding: 28px clamp(16px, 4vw, 48px) 60px;
-  }
-  header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
-  header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  body { margin: 0; background: #0d0d0d; color: #ffffff; font-family: 'Archivo', system-ui, sans-serif; }
+  a { color: #ff6eb4; text-decoration: none; }
+  a:hover { color: #ffffff; }
+  @keyframes ofhmq { to { transform: translateX(-50%); } }
 
-  .filters { display: flex; gap: 6px; margin: 26px 0 18px; flex-wrap: wrap; }
-  .filters button {
-    background: var(--surface); color: var(--ink-2); border: 1px solid var(--border);
-    border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600;
-    cursor: pointer; font-family: inherit;
-  }
-  .filters button:hover { background: #242423; }
-  .filters button.active { background: linear-gradient(90deg, #7a4dff, #d94fa6); color: #fff; border-color: transparent; }
+  /* hero */
+  .hero { position: relative; height: 200px; overflow: hidden; background: #0a0a0a; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .hero-bg { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; }
+  .hero-mq { display: flex; gap: 10px; animation: ofhmq 48s linear infinite; will-change: transform; padding-right: 10px; }
+  .hero-mq img { height: 156px; width: 156px; object-fit: cover; border-radius: 8px; flex: none; opacity: 0.9; }
+  .hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(13,13,13,0.92) 100%); }
+  .hero-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; }
+  .hero-title { font-size: 46px; line-height: 1; letter-spacing: -1.5px; text-shadow: 0 2px 24px rgba(0,0,0,0.6); }
+  .hero-sub { font-size: 13px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; }
 
-  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
-  .tile .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-  .tile .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
-  .tile .delta { font-size: 12px; margin-top: 4px; color: var(--muted); }
-  .tile .delta .up { color: var(--up); font-weight: 700; }
-  .tile .delta .down { color: var(--down); font-weight: 700; }
+  /* layout */
+  .shell { display: flex; align-items: flex-start; }
+  .main { flex: 1; min-width: 0; padding: 26px 40px 60px; }
+  .main-inner { max-width: 1100px; margin: 0 auto; }
 
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 20px 12px; margin-top: 18px; position: relative;
-  }
-  .card h2 { font-size: 17px; font-weight: 800; }
-  .card .h-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .chart-wrap { position: relative; margin-top: 10px; }
-  .chart-wrap svg { display: block; width: 100%; height: auto; }
-  .tooltip {
-    position: absolute; pointer-events: none; display: none; z-index: 5;
-    background: #fff; color: #0b0b0b; border-radius: 8px; padding: 8px 12px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.45); white-space: nowrap;
-  }
+  /* sidebar */
+  .sidebar { position: sticky; top: 0; width: 240px; flex: none; background: #161616; min-height: 100vh; border-right: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; }
+  .side-avatar { background: #0a0a0a; padding: 22px; display: flex; justify-content: center; }
+  .side-avatar img { width: 150px; height: 150px; border-radius: 10px; display: block; }
+  .side-nav { padding: 18px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .navitem { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; color: #c3c2b7; }
+  .navitem:hover { background: #202020; color: #ffffff; }
+  .navitem.primary { font-weight: 800; color: #ffffff; }
+  .navitem.primary:hover { background: #202020; }
+  .side-div { height: 1px; background: rgba(255,255,255,0.1); margin: 12px 12px; }
+  .extlink { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #898781; }
+  .extlink:hover { background: #202020; color: #ffffff; }
+  .extlink .badge { width: 18px; text-align: center; font-weight: 900; color: #898781; }
+
+  /* controls */
+  .controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .ranges { display: flex; gap: 22px; }
+  .range { cursor: pointer; padding-bottom: 7px; font-size: 14px; font-weight: 600; color: #898781; border-bottom: 3px solid transparent; }
+  .range:hover { color: #ffffff; }
+  .srcwrap { display: flex; background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 4px; gap: 4px; }
+  .srctab { padding: 7px 20px; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer; color: #898781; background: transparent; }
+
+  /* big stats */
+  .bigstats { display: flex; align-items: flex-start; justify-content: center; gap: 44px; padding: 40px 0 34px; }
+  .bignum { font-size: 68px; font-weight: 900; line-height: 1; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+  .biglabel { margin-top: 10px; font-size: 14px; font-weight: 700; color: #c3c2b7; }
+  .bigdelta { margin-top: 6px; font-size: 12px; color: #898781; }
+  .statdiv { width: 1px; height: 84px; background: #2c2c2a; }
+
+  /* chart card */
+  .card { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 22px 22px 12px; }
+  .card h2 { font-size: 20px; font-weight: 800; }
+  .card .h-sub { font-size: 12px; color: #898781; margin-top: 2px; }
+  .chart-wrap { position: relative; margin-top: 12px; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .tooltip { position: absolute; pointer-events: none; display: none; transform: translate(-50%, -130%); background: #ffffff; color: #0b0b0b; border-radius: 8px; padding: 8px 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.45); white-space: nowrap; z-index: 5; }
   .tooltip .t-date { color: #52514e; font-size: 11px; }
   .tooltip .t-val { font-size: 15px; font-weight: 800; margin-top: 1px; }
-  details.tableview { margin: 8px 0 4px; }
-  details.tableview summary { color: var(--muted); font-size: 12px; cursor: pointer; }
-  details.tableview .scroll { max-height: 260px; overflow: auto; margin-top: 8px; }
-  details.tableview table { border-collapse: collapse; font-size: 12px; width: 100%; }
-  details.tableview th, details.tableview td {
-    text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--grid);
-    font-variant-numeric: tabular-nums; color: var(--ink-2);
-  }
-  details.tableview th { color: var(--muted); position: sticky; top: 0; background: var(--surface); }
 
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
-  .grid2 .card { margin-top: 0; }
-  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  /* top section */
+  .topsec { margin-top: 34px; }
+  .toptitle { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+  .topsub { font-size: 12px; color: #898781; margin-top: 2px; }
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin-top: 26px; }
+  .pod { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .pod img { width: 100%; object-fit: cover; border-radius: 10px; display: block; background: #242423; }
+  .pod .pod-label { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+  .pod .pod-views { font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .pod .pod-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 10px; font-size: 44px; font-weight: 900; color: rgba(255,255,255,0.85); text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+  .gifgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 26px; }
+  .gifgrid a { color: inherit; }
+  .gifgrid a:hover { color: inherit; }
+  .gifgrid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #242423; display: block; }
+  .gifgrid .g-views { font-size: 13px; font-weight: 800; margin-top: 6px; }
+  .clist { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px 20px; margin-top: 26px; }
+  .crow { display: grid; grid-template-columns: 30px 140px 1fr 70px; gap: 12px; align-items: center; padding: 6px 0; font-size: 13px; }
+  .crow .c-rank { font-weight: 900; color: #52514e; font-variant-numeric: tabular-nums; }
+  .crow .c-name { color: #c3c2b7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crow .c-track { height: 10px; border-radius: 4px; background: #242423; overflow: hidden; }
+  .crow .c-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1d9c64, #2bd889); }
+  .crow .c-val { text-align: right; font-variant-numeric: tabular-nums; color: #c3c2b7; }
 
-  .gifgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 14px; }
-  .gifcard { text-decoration: none; color: inherit; }
-  .gifcard img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #242423; display: block; }
-  .gifcard .g-views { font-size: 13px; font-weight: 800; margin-top: 6px; }
-  .gifcard .g-title { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .err { background: #3a1d1d; border: 1px solid #6b3333; color: #f0c0c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; display: none; }
 
-  .barlist { margin-top: 12px; }
-  .barrow { display: grid; grid-template-columns: 120px 1fr 70px; gap: 10px; align-items: center; padding: 5px 0; font-size: 13px; }
-  .barrow .b-label { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .barrow .b-track { height: 10px; border-radius: 4px; background: #242423; overflow: hidden; }
-  .barrow .b-fill { height: 100%; border-radius: 4px 4px 4px 4px; }
-  .barrow .b-val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-
-  .toplist { margin-top: 12px; }
-  .toprow { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
-  .toprow:last-child { border-bottom: none; }
-  .toprow a { color: var(--ink-2); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .toprow a:hover { color: var(--ink); }
-  .toprow .t-n { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
-
-  .err { background: #3a1d1d; border: 1px solid #6b3333; color: #f0c0c0; padding: 12px 16px; border-radius: 8px; margin-top: 18px; font-size: 13px; display: none; }
-  footer { color: var(--muted); font-size: 11px; margin-top: 30px; }
+  @media (max-width: 800px) { .sidebar { display: none; } .main { padding: 20px 16px 50px; } .hero-title { font-size: 32px; } }
 </style>
 </head>
-<body data-palette="#a985ff,#ff6eb4,#2bd889">
+<body>
 
-<header>
-  <h1>OneFootball Heads</h1>
-  <div class="sub">GIPHY &amp; KLIPY analytics — local dashboard</div>
-</header>
-
-<div class="err" id="err"></div>
-
-<div class="filters" id="filters" role="group" aria-label="Date range">
-  <button data-days="7">7D</button>
-  <button data-days="30" class="active">30D</button>
-  <button data-days="90">90D</button>
-  <button data-days="180">6M</button>
-  <button data-days="365">1Y</button>
-  <button data-days="">All</button>
-</div>
-
-<div class="tiles" id="tiles"></div>
-
-<div class="card">
-  <h2>Total GIF &amp; Sticker Views</h2>
-  <div class="h-sub">GIPHY · daily views</div>
-  <div class="chart-wrap" id="giphyChart"></div>
-  <details class="tableview"><summary>View as table</summary><div class="scroll" id="giphyTable"></div></details>
-</div>
-
-<div class="card">
-  <h2>Impressions</h2>
-  <div class="h-sub">KLIPY · daily impressions</div>
-  <div class="chart-wrap" id="klipyChart"></div>
-  <details class="tableview"><summary>View as table</summary><div class="scroll" id="klipyTable"></div></details>
-</div>
-
-<div class="card">
-  <h2>Top GIFs</h2>
-  <div class="h-sub">GIPHY · all-time views</div>
-  <div class="gifgrid" id="gifgrid"></div>
-</div>
-
-<div class="grid2">
-  <div class="card">
-    <h2>Top on KLIPY</h2>
-    <div class="h-sub">all-time impressions</div>
-    <div class="toplist" id="klipyTop"></div>
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-shade"></div>
+  <div class="hero-inner">
+    <div class="hero-title"><span style="font-weight:900">OneFootball Heads</span> <span style="font-weight:400;color:#c3c2b7">Dashboard</span></div>
+    <div class="hero-sub" id="heroSub">GIPHY &amp; KLIPY Analytics</div>
   </div>
-  <div class="card">
-    <h2>KLIPY Countries</h2>
-    <div class="h-sub">all-time impressions</div>
-    <div class="barlist" id="countries"></div>
+</div>
+
+<div class="shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="side-avatar"><img src="avatar.jpg" alt="OneFootball Heads avatar"></div>
+    <div class="side-nav">
+      <div class="navitem primary" id="navDash">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path id="navDashIcon" d="M1 11 L5 11 L7 5 L10 14 L12 8 L13.5 11 L17 11" stroke="#ff6eb4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        My Dashboard
+      </div>
+      <div class="navitem" id="navTop">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 2 L15 2 L15 5 A6 6 0 0 1 3 5 Z M9 11 L9 14 M5.5 16 L12.5 16" stroke="#898781" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        Top GIFs
+      </div>
+      <div class="navitem" id="navCountries">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#898781" stroke-width="1.8"></circle><path d="M2 9 L16 9 M9 2 C6 6 6 12 9 16 C12 12 12 6 9 2" stroke="#898781" stroke-width="1.8"></path></svg>
+        Countries
+      </div>
+      <div class="side-div"></div>
+      <a class="extlink" href="https://giphy.com/onefootballheads" target="_blank" rel="noopener"><span class="badge">G</span> GIPHY Channel</a>
+      <a class="extlink" href="https://klipy.com" target="_blank" rel="noopener"><span class="badge">K</span> KLIPY Channel</a>
+    </div>
   </div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main"><div class="main-inner">
+
+    <div class="err" id="err"></div>
+
+    <div class="controls" id="sec-dash">
+      <div class="ranges" id="ranges"></div>
+      <div class="srcwrap">
+        <div class="srctab" id="tabGiphy">GIPHY</div>
+        <div class="srctab" id="tabKlipy">KLIPY</div>
+      </div>
+    </div>
+
+    <div class="bigstats">
+      <div style="text-align:center">
+        <div class="bignum" id="statB">—</div>
+        <div class="biglabel" id="statBLabel">GIF Views</div>
+        <div class="bigdelta" id="delta" style="display:none"><span id="deltaVal" style="font-weight:800"></span> vs previous period</div>
+      </div>
+      <div class="statdiv"></div>
+      <div style="text-align:center">
+        <div class="bignum" id="statC">—</div>
+        <div class="biglabel">Daily Average</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="chartTitle">Total GIF Views</h2>
+      <div class="h-sub" id="chartSub">GIPHY · daily views</div>
+      <div class="chart-wrap" id="chartWrap"></div>
+    </div>
+
+    <div class="topsec" id="sec-top">
+      <div class="toptitle" id="topTitle">Top GIFs</div>
+      <div class="topsub" id="topSub">GIPHY · all-time views</div>
+      <div class="podium" id="podium"></div>
+      <div id="topBody"></div>
+    </div>
+
+  </div></div>
 </div>
 
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
+const ACC_GIPHY = ["#a985ff", "#ff6eb4"], ACC_KLIPY = ["#1d9c64", "#2bd889"];
+const state = { days: 30, source: "giphy", data: null };
+
 const fmt = (n) => n.toLocaleString("en-US");
 const fmtShort = (n) => {
   if (n >= 1e6) return (n / 1e6 >= 10 ? Math.round(n / 1e6) : (n / 1e6).toFixed(1)) + "M";
@@ -162,11 +186,17 @@ const fmtShort = (n) => {
   return String(n);
 };
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const fmtDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return `${m}/${d}/${y}`; };
 const fmtTick = (iso, long) => {
   const [y, m, d] = iso.split("-").map(Number);
   return long ? `${MONTHS[m - 1]} '${String(y).slice(2)}` : `${MONTHS[m - 1]} ${d}`;
 };
+const fmtDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return `${m}/${d}/${y}`; };
+const niceCeil = (v) => {
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
+  return 10 * p;
+};
+const accents = () => state.source === "klipy" ? ACC_KLIPY : ACC_GIPHY;
 
 function parseCSV(text) {
   const rows = []; let row = [], field = "", inQ = false;
@@ -192,267 +222,325 @@ const getCSV = (name) => fetch(`data/${name}`).then(r => {
   return r.text();
 }).then(parseCSV);
 
-// ---------- line chart (SVG, crosshair + tooltip) ----------
-function lineChart(container, series, opts) {
-  container.innerHTML = "";
-  const W = Math.max(560, container.clientWidth || 900), H = 300;
-  const P = { l: 52, r: 16, t: 14, b: 30 };
+function sliceSeries() {
+  const D = state.data;
+  if (!D) return { cur: [], prev: [] };
+  const full = state.source === "giphy" ? D.g : D.k;
+  if (!state.days) return { cur: full, prev: [] };
+  const end = Math.max(0, full.length - state.days);
+  return { cur: full.slice(end), prev: full.slice(Math.max(0, end - state.days), end) };
+}
+
+// ---------- hero marquee ----------
+function renderHero() {
+  const el = $("heroBg"); el.innerHTML = "";
+  const D = state.data;
+  const [accA] = ACC_GIPHY;
+  if (!D || !D.board.length) {
+    el.style.background = `radial-gradient(ellipse at 50% 120%, ${accA}33, transparent 60%)`;
+    return;
+  }
+  const ids = D.board.slice(0, 14).map(g => g.id);
+  const mq = document.createElement("div"); mq.className = "hero-mq";
+  for (const id of [...ids, ...ids]) {
+    const img = document.createElement("img");
+    img.src = `https://media.giphy.com/media/${id}/200w.gif`;
+    img.alt = "";
+    img.onerror = () => { img.style.visibility = "hidden"; };
+    mq.appendChild(img);
+  }
+  el.appendChild(mq);
+}
+
+// ---------- chart ----------
+function renderChart() {
+  const container = $("chartWrap"); container.innerHTML = "";
+  const { cur } = sliceSeries();
+  const [accA, accB] = accents();
+  const isGiphy = state.source === "giphy";
+  const W = 900, H = 300, P = { l: 56, r: 16, t: 16, b: 32 };
   const iw = W - P.l - P.r, ih = H - P.t - P.b;
-  const n = series.length;
-  const max = Math.max(1, ...series.map(p => p.v));
-  const yMax = niceCeil(max);
+  const n = cur.length;
+  const yMax = niceCeil(Math.max(1, ...cur.map(p => p.v)));
   const x = (i) => P.l + (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
   const y = (v) => P.t + ih - (v / yMax) * ih;
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", opts.aria);
-  const uid = opts.id;
+  svg.setAttribute("aria-label", isGiphy ? "GIPHY daily views line chart" : "KLIPY daily impressions line chart");
 
-  // defs: line gradient + area fade
-  const defs = document.createElementNS(svgNS, "defs");
+  const defs = document.createElementNS(NS, "defs");
   defs.innerHTML =
-    `<linearGradient id="ln${uid}" x1="0" y1="0" x2="1" y2="0">` +
-    `<stop offset="0" stop-color="${opts.colorA}"/><stop offset="1" stop-color="${opts.colorB}"/></linearGradient>` +
-    `<linearGradient id="ar${uid}" x1="0" y1="0" x2="0" y2="1">` +
-    `<stop offset="0" stop-color="${opts.colorB}" stop-opacity="0.22"/>` +
-    `<stop offset="1" stop-color="${opts.colorB}" stop-opacity="0"/></linearGradient>`;
+    `<linearGradient id="ofhLn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${accA}"/><stop offset="1" stop-color="${accB}"/></linearGradient>` +
+    `<linearGradient id="ofhAr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${accB}" stop-opacity="0.22"/><stop offset="1" stop-color="${accB}" stop-opacity="0"/></linearGradient>`;
   svg.appendChild(defs);
 
-  // y grid + ticks
-  const ticks = 4;
-  for (let t = 0; t <= ticks; t++) {
-    const v = (yMax / ticks) * t, yy = y(v);
-    const ln = document.createElementNS(svgNS, "line");
+  for (let t = 0; t <= 4; t++) {
+    const v = (yMax / 4) * t, yy = y(v);
+    const ln = document.createElementNS(NS, "line");
     ln.setAttribute("x1", P.l); ln.setAttribute("x2", W - P.r);
     ln.setAttribute("y1", yy); ln.setAttribute("y2", yy);
-    ln.setAttribute("stroke", t === 0 ? "var(--baseline)" : "var(--grid)");
-    ln.setAttribute("stroke-width", "1");
+    ln.setAttribute("stroke", t === 0 ? "#383835" : "#2c2c2a");
     svg.appendChild(ln);
-    const tx = document.createElementNS(svgNS, "text");
+    const tx = document.createElementNS(NS, "text");
     tx.setAttribute("x", P.l - 8); tx.setAttribute("y", yy + 4);
     tx.setAttribute("text-anchor", "end");
-    tx.setAttribute("fill", "var(--muted)"); tx.setAttribute("font-size", "11");
+    tx.setAttribute("fill", "#898781"); tx.setAttribute("font-size", "11");
+    tx.setAttribute("font-family", "Archivo, sans-serif");
     tx.textContent = fmtShort(v);
     svg.appendChild(tx);
   }
-  // x ticks (~6)
-  const long = n > 200;
-  const step = Math.max(1, Math.round(n / 6));
+  const long = n > 200, step = Math.max(1, Math.round(n / 6));
   for (let i = 0; i < n; i += step) {
-    const tx = document.createElementNS(svgNS, "text");
+    const tx = document.createElementNS(NS, "text");
     tx.setAttribute("x", x(i)); tx.setAttribute("y", H - 8);
     tx.setAttribute("text-anchor", "middle");
-    tx.setAttribute("fill", "var(--muted)"); tx.setAttribute("font-size", "11");
-    tx.textContent = fmtTick(series[i].d, long);
+    tx.setAttribute("fill", "#898781"); tx.setAttribute("font-size", "11");
+    tx.setAttribute("font-family", "Archivo, sans-serif");
+    tx.textContent = fmtTick(cur[i].d, long);
     svg.appendChild(tx);
   }
 
-  // area + line
-  let dLine = "", dArea = `M ${x(0)} ${y(0)} `;
-  series.forEach((p, i) => {
+  let dLine = "", dArea = n ? `M ${x(0).toFixed(1)} ${y(0).toFixed(1)} ` : "";
+  cur.forEach((p, i) => {
     dLine += (i ? "L" : "M") + ` ${x(i).toFixed(1)} ${y(p.v).toFixed(1)} `;
     dArea += `L ${x(i).toFixed(1)} ${y(p.v).toFixed(1)} `;
   });
-  dArea += `L ${x(n - 1)} ${y(0)} Z`;
-  const area = document.createElementNS(svgNS, "path");
-  area.setAttribute("d", dArea); area.setAttribute("fill", `url(#ar${uid})`);
+  if (n) dArea += `L ${x(n - 1).toFixed(1)} ${y(0).toFixed(1)} Z`;
+  const area = document.createElementNS(NS, "path");
+  area.setAttribute("d", dArea); area.setAttribute("fill", "url(#ofhAr)");
   svg.appendChild(area);
-  const line = document.createElementNS(svgNS, "path");
-  line.setAttribute("d", dLine);
-  line.setAttribute("fill", "none");
-  line.setAttribute("stroke", `url(#ln${uid})`);
-  line.setAttribute("stroke-width", "2");
+  const line = document.createElementNS(NS, "path");
+  line.setAttribute("d", dLine); line.setAttribute("fill", "none");
+  line.setAttribute("stroke", "url(#ofhLn)");
+  line.setAttribute("stroke-width", "2.5");
   line.setAttribute("stroke-linejoin", "round");
   svg.appendChild(line);
 
-  // crosshair + hover dot
-  const cross = document.createElementNS(svgNS, "line");
-  cross.setAttribute("y1", P.t); cross.setAttribute("y2", P.t + ih);
-  cross.setAttribute("stroke", "var(--muted)"); cross.setAttribute("stroke-dasharray", "3 3");
+  const cross = document.createElementNS(NS, "line");
+  cross.setAttribute("y1", "16"); cross.setAttribute("y2", "268");
+  cross.setAttribute("stroke", "#898781"); cross.setAttribute("stroke-dasharray", "3 3");
   cross.style.display = "none";
   svg.appendChild(cross);
-  const dot = document.createElementNS(svgNS, "circle");
-  dot.setAttribute("r", "5");
-  dot.setAttribute("fill", "#fff"); dot.setAttribute("stroke", opts.colorB);
-  dot.setAttribute("stroke-width", "3");
+  const dot = document.createElementNS(NS, "circle");
+  dot.setAttribute("r", "5"); dot.setAttribute("fill", "#ffffff");
+  dot.setAttribute("stroke", accB); dot.setAttribute("stroke-width", "3");
   dot.style.display = "none";
   svg.appendChild(dot);
 
   container.appendChild(svg);
-  const tip = document.createElement("div");
-  tip.className = "tooltip";
+  const tip = document.createElement("div"); tip.className = "tooltip";
   const tDate = document.createElement("div"); tDate.className = "t-date";
   const tVal = document.createElement("div"); tVal.className = "t-val";
   tip.append(tDate, tVal);
   container.appendChild(tip);
 
-  const show = (i, clientX) => {
-    const p = series[i];
-    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
-    cross.style.display = "";
-    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.v));
-    dot.style.display = "";
-    tDate.textContent = fmtDate(p.d);
-    tVal.textContent = `${fmt(p.v)} ${opts.unit}`;
-    tip.style.display = "block";
-    const rect = container.getBoundingClientRect();
-    const px = (x(i) / W) * rect.width;
-    const py = (y(p.v) / H) * rect.height;
-    const tw = tip.offsetWidth;
-    tip.style.left = Math.min(Math.max(px - tw / 2, 0), rect.width - tw) + "px";
-    tip.style.top = Math.max(py - tip.offsetHeight - 16, 0) + "px";
-  };
   const hide = () => { cross.style.display = "none"; dot.style.display = "none"; tip.style.display = "none"; };
   svg.addEventListener("pointermove", (e) => {
     const rect = svg.getBoundingClientRect();
     const fx = ((e.clientX - rect.left) / rect.width) * W;
     const i = Math.round(((fx - P.l) / iw) * (n - 1));
-    if (i >= 0 && i < n) show(i, e.clientX); else hide();
+    if (!(i >= 0 && i < n)) { hide(); return; }
+    const p = cur[i];
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
+    cross.style.display = "";
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.v));
+    dot.style.display = "";
+    tDate.textContent = fmtDate(p.d);
+    tVal.textContent = `${fmt(p.v)} ${isGiphy ? "Views" : "Impressions"}`;
+    tip.style.display = "block";
+    tip.style.left = (x(i) / W * 100) + "%";
+    tip.style.top = (y(p.v) / H * 100) + "%";
   });
   svg.addEventListener("pointerleave", hide);
 }
-function niceCeil(v) {
-  const p = Math.pow(10, Math.floor(Math.log10(v)));
-  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
-  return 10 * p;
-}
-function fillTable(el, series, unit) {
-  el.innerHTML = "";
-  const table = document.createElement("table");
-  const tr = document.createElement("tr");
-  for (const h of ["Date", unit]) { const th = document.createElement("th"); th.textContent = h; tr.appendChild(th); }
-  table.appendChild(tr);
-  for (let i = series.length - 1; i >= 0; i--) {
-    const r = document.createElement("tr");
-    const td1 = document.createElement("td"); td1.textContent = series[i].d;
-    const td2 = document.createElement("td"); td2.textContent = fmt(series[i].v);
-    r.append(td1, td2); table.appendChild(r);
+
+// ---------- controls + stats ----------
+const RANGES = [["7D", 7], ["30D", 30], ["90D", 90], ["6M", 180], ["1Y", 365], ["All", null]];
+function renderControls() {
+  const [, accB] = accents();
+  const el = $("ranges"); el.innerHTML = "";
+  for (const [label, days] of RANGES) {
+    const d = document.createElement("div");
+    d.className = "range"; d.textContent = label;
+    if (state.days === days) {
+      d.style.color = "#ffffff"; d.style.fontWeight = "800"; d.style.borderBottomColor = accB;
+    }
+    d.addEventListener("click", () => { state.days = days; render(); });
+    el.appendChild(d);
   }
-  el.appendChild(table);
+  const isGiphy = state.source === "giphy";
+  const tg = $("tabGiphy"), tk = $("tabKlipy");
+  tg.style.background = isGiphy ? `linear-gradient(90deg, ${ACC_GIPHY[0]}, ${ACC_GIPHY[1]})` : "transparent";
+  tg.style.color = isGiphy ? "#ffffff" : "#898781";
+  tk.style.background = !isGiphy ? `linear-gradient(90deg, ${ACC_KLIPY[0]}, ${ACC_KLIPY[1]})` : "transparent";
+  tk.style.color = !isGiphy ? "#ffffff" : "#898781";
+  $("navDashIcon").setAttribute("stroke", accB);
+  $("heroSub").style.color = accB;
 }
 
-// ---------- app ----------
-let GD = [], KD = [], state = { days: 30 };
+function renderStats() {
+  const { cur, prev } = sliceSeries();
+  const isGiphy = state.source === "giphy";
+  const sum = (s) => s.reduce((a, p) => a + p.v, 0);
+  const curSum = sum(cur), prevSum = sum(prev);
+  $("statB").textContent = fmtShort(curSum);
+  $("statBLabel").textContent = isGiphy ? "GIF Views" : "GIF Impressions";
+  $("statC").textContent = fmtShort(cur.length ? Math.round(curSum / cur.length) : 0);
+  const deltaEl = $("delta");
+  if (prev.length && prevSum > 0) {
+    const pct = ((curSum - prevSum) / prevSum) * 100;
+    const v = $("deltaVal");
+    v.textContent = `${pct >= 0 ? "↑" : "↓"} ${Math.abs(pct).toFixed(1)}%`;
+    v.style.color = pct >= 0 ? "#2bd889" : "#e66767";
+    deltaEl.style.display = "";
+  } else deltaEl.style.display = "none";
+  $("chartTitle").textContent = isGiphy ? "Total GIF Views" : "Daily Impressions";
+  $("chartSub").textContent = isGiphy ? "GIPHY · daily views" : "KLIPY · daily impressions";
+}
 
-function slice(series, days) {
-  if (!days) return series;
-  return series.slice(Math.max(0, series.length - days));
-}
-function prevSlice(series, days) {
-  if (!days) return [];
-  const end = Math.max(0, series.length - days);
-  return series.slice(Math.max(0, end - days), end);
-}
-const sum = (s) => s.reduce((a, p) => a + p.v, 0);
+// ---------- top section (podium + grid / country list) ----------
+function renderTop() {
+  const D = state.data;
+  const isGiphy = state.source === "giphy";
+  const [accA, accB] = accents();
+  $("topTitle").textContent = isGiphy ? "Top GIFs" : "Top Countries on KLIPY";
+  $("topSub").textContent = isGiphy ? "GIPHY · all-time views" : "KLIPY · all-time impressions";
+  const podEl = $("podium"); podEl.innerHTML = "";
+  const bodyEl = $("topBody"); bodyEl.innerHTML = "";
+  if (!D) return;
 
-function tile(label, value, deltaHTML) {
-  const d = document.createElement("div"); d.className = "tile";
-  const l = document.createElement("div"); l.className = "label"; l.textContent = label;
-  const v = document.createElement("div"); v.className = "value"; v.textContent = value;
-  d.append(l, v);
-  if (deltaHTML) { const dd = document.createElement("div"); dd.className = "delta"; dd.append(deltaHTML); d.appendChild(dd); }
-  return d;
-}
-function deltaNode(cur, prev) {
-  if (!prev) return null;
-  const span = document.createElement("span");
-  const pct = prev === 0 ? null : ((cur - prev) / prev) * 100;
-  if (pct === null) return null;
-  const arrow = document.createElement("span");
-  arrow.className = pct >= 0 ? "up" : "down";
-  arrow.textContent = `${pct >= 0 ? "↑" : "↓"} ${Math.abs(pct).toFixed(1)}%`;
-  span.append(arrow, document.createTextNode(" vs previous period"));
-  return span;
+  const PW = [200, 240, 200], PLACE = [2, 1, 3], PH = [128, 176, 96];
+  const blockBgs = ["linear-gradient(180deg, #3a3a44, #26262c)",
+                    `linear-gradient(90deg, ${accA}, ${accB})`,
+                    "linear-gradient(180deg, #2b2b30, #1e1e22)"];
+  const rings = ["rgba(255,255,255,0.25)", accB, "rgba(255,255,255,0.15)"];
+  const top3 = isGiphy ? D.board.slice(0, 3) : D.countries.slice(0, 3);
+
+  PLACE.forEach((place, col) => {
+    const it = top3[place - 1];
+    const pod = document.createElement("div");
+    pod.className = "pod"; pod.style.width = PW[col] + "px";
+    if (it) {
+      const a = document.createElement("a");
+      a.href = isGiphy ? `https://giphy.com/gifs/${it.id}` : "https://klipy.com";
+      a.target = "_blank"; a.rel = "noopener";
+      a.style.cssText = "display:block;width:100%";
+      const img = document.createElement("img");
+      img.src = isGiphy ? `https://media.giphy.com/media/${it.id}/200w.gif`
+                        : `https://flagcdn.com/w320/${it.code}.png`;
+      img.alt = isGiphy ? it.title : it.name;
+      img.style.aspectRatio = isGiphy ? "1" : "4 / 3";
+      img.style.border = `2px solid ${rings[col]}`;
+      if (place === 1) img.style.boxShadow = `0 6px 30px ${accB}44`;
+      img.onerror = () => { img.style.visibility = "hidden"; };
+      a.appendChild(img);
+      pod.appendChild(a);
+    }
+    const txt = document.createElement("div"); txt.style.textAlign = "center";
+    if (it && !isGiphy) {
+      const l = document.createElement("div"); l.className = "pod-label"; l.textContent = it.name;
+      txt.appendChild(l);
+    }
+    const v = document.createElement("div"); v.className = "pod-views";
+    v.style.fontSize = (place === 1 ? 26 : 20) + "px";
+    v.textContent = it ? fmt(isGiphy ? it.views : it.v) : "";
+    txt.appendChild(v);
+    pod.appendChild(txt);
+    const block = document.createElement("div");
+    block.className = "pod-block";
+    block.style.height = PH[col] + "px";
+    block.style.background = blockBgs[col];
+    block.textContent = place;
+    pod.appendChild(block);
+    podEl.appendChild(pod);
+  });
+
+  if (isGiphy) {
+    const grid = document.createElement("div"); grid.className = "gifgrid";
+    for (const g of D.board.slice(3, 15)) {
+      const a = document.createElement("a");
+      a.href = `https://giphy.com/gifs/${g.id}`; a.target = "_blank"; a.rel = "noopener";
+      const img = document.createElement("img");
+      img.src = `https://media.giphy.com/media/${g.id}/200w.gif`;
+      img.alt = g.title; img.loading = "lazy";
+      img.onerror = () => { img.style.visibility = "hidden"; };
+      const v = document.createElement("div"); v.className = "g-views";
+      v.textContent = `${fmtShort(g.views)} views`;
+      a.append(img, v);
+      grid.appendChild(a);
+    }
+    bodyEl.appendChild(grid);
+  } else {
+    const listCard = document.createElement("div"); listCard.className = "clist";
+    const cMax = Math.max(1, ...D.countries.map(c => c.v));
+    D.countries.slice(3).forEach((c, i) => {
+      const row = document.createElement("div"); row.className = "crow";
+      const r = document.createElement("div"); r.className = "c-rank"; r.textContent = i + 4;
+      const nm = document.createElement("div"); nm.className = "c-name"; nm.textContent = c.name;
+      const track = document.createElement("div"); track.className = "c-track";
+      const fill = document.createElement("div"); fill.className = "c-fill";
+      fill.style.width = Math.max(2, (c.v / cMax) * 100).toFixed(1) + "%";
+      track.appendChild(fill);
+      const val = document.createElement("div"); val.className = "c-val"; val.textContent = fmtShort(c.v);
+      row.append(r, nm, track, val);
+      listCard.appendChild(row);
+    });
+    bodyEl.appendChild(listCard);
+  }
 }
 
 function render() {
-  const days = state.days;
-  const g = slice(GD, days), k = slice(KD, days);
-  const gp = prevSlice(GD, days), kp = prevSlice(KD, days);
+  renderControls();
+  renderStats();
+  renderChart();
+  renderTop();
+}
 
-  const tiles = $("tiles"); tiles.innerHTML = "";
-  const gSum = sum(g), kSum = sum(k);
-  const best = g.reduce((a, p) => (p.v > a.v ? p : a), { v: 0, d: "" });
-  const g30 = slice(GD, 30);   // avg is always the trailing 30 days, independent of the range filter
-  tiles.appendChild(tile("GIPHY views", fmt(gSum), deltaNode(gSum, sum(gp))));
-  tiles.appendChild(tile("GIPHY avg / day (30d)", fmt(Math.round(sum(g30) / Math.max(1, g30.length)))));
-  tiles.appendChild(tile("GIPHY best day", best.d ? `${fmtShort(best.v)} · ${fmtTick(best.d, false)}` : "—"));
-  tiles.appendChild(tile("KLIPY impressions", fmt(kSum), deltaNode(kSum, sum(kp))));
-
-  lineChart($("giphyChart"), g, { id: "g", colorA: "var(--giphy-a)", colorB: "var(--giphy-b)", unit: "Views", aria: "GIPHY daily views line chart" });
-  lineChart($("klipyChart"), k, { id: "k", colorA: "var(--klipy)", colorB: "var(--klipy)", unit: "Impressions", aria: "KLIPY daily impressions line chart" });
-  fillTable($("giphyTable"), g, "Views");
-  fillTable($("klipyTable"), k, "Impressions");
+function scrollToSec(id) {
+  const el = $(id);
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 16, behavior: "smooth" });
 }
 
 async function boot() {
+  $("tabGiphy").addEventListener("click", () => { state.source = "giphy"; render(); });
+  $("tabKlipy").addEventListener("click", () => { state.source = "klipy"; render(); });
+  $("navDash").addEventListener("click", () => scrollToSec("sec-dash"));
+  $("navTop").addEventListener("click", () => {
+    if (state.source !== "giphy") { state.source = "giphy"; render(); }
+    setTimeout(() => scrollToSec("sec-top"), 120);
+  });
+  $("navCountries").addEventListener("click", () => {
+    if (state.source !== "klipy") { state.source = "klipy"; render(); }
+    setTimeout(() => scrollToSec("sec-top"), 120);
+  });
   try {
-    const [gdaily, kdaily, gviews, gboard, ktop, kcountries] = await Promise.all([
+    const [gd, kd, gv, gb, kc] = await Promise.all([
       getCSV("giphy-daily.csv"), getCSV("klipy-impressions-daily.csv"),
       getCSV("giphy-views.csv"), getCSV("giphy-leaderboard.csv"),
-      getCSV("klipy-top-performing.csv"), getCSV("klipy-top-countries.csv"),
+      getCSV("klipy-top-countries.csv"),
     ]);
-    GD = gdaily.map(r => ({ d: r.date, v: +r.views || 0 }));
-    KD = kdaily.map(r => ({ d: r.date, v: +r.impressions || 0 }));
-    const latestSnap = (rows) => rows.length ? rows.reduce((a, r) => r.snapshot_date > a ? r.snapshot_date : a, "") : "";
-
-    // top gifs grid (all-time leaderboard, titles joined from views csv)
-    const titles = new Map(gviews.map(r => [r.gif_id, r.title]));
-    const grid = $("gifgrid");
-    for (const r of gboard.filter(r => r.snapshot_date === latestSnap(gboard)).slice(0, 18)) {
-      const a = document.createElement("a");
-      a.className = "gifcard"; a.href = `https://giphy.com/gifs/${r.gif_id}`; a.target = "_blank"; a.rel = "noopener";
-      const img = document.createElement("img");
-      img.loading = "lazy"; img.alt = titles.get(r.gif_id) || r.gif_id;
-      img.src = `https://media.giphy.com/media/${r.gif_id}/200w.gif`;
-      img.onerror = () => { img.style.visibility = "hidden"; };
-      const v = document.createElement("div"); v.className = "g-views"; v.textContent = fmtShort(+r.views) + " views";
-      const t = document.createElement("div"); t.className = "g-title"; t.textContent = titles.get(r.gif_id) || r.gif_id;
-      a.append(img, v, t);
-      grid.appendChild(a);
-    }
-
-    // klipy top list
-    const klTop = $("klipyTop");
-    for (const r of ktop.filter(r => r.snapshot_date === latestSnap(ktop)).slice(0, 6)) {
-      const row = document.createElement("div"); row.className = "toprow";
-      const a = document.createElement("a"); a.href = r.url; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = r.title;
-      const n = document.createElement("span"); n.className = "t-n"; n.textContent = fmt(+r.impressions);
-      row.append(a, n); klTop.appendChild(row);
-    }
-
-    // countries bars (sequential magnitude, single hue)
-    const cs = kcountries.filter(r => r.snapshot_date === latestSnap(kcountries))
-                         .sort((a, b) => +b.impressions - +a.impressions).slice(0, 10);
-    const cMax = Math.max(1, ...cs.map(r => +r.impressions));
-    const cEl = $("countries");
-    for (const r of cs) {
-      const row = document.createElement("div"); row.className = "barrow";
-      const l = document.createElement("div"); l.className = "b-label"; l.textContent = r.country;
-      const track = document.createElement("div"); track.className = "b-track";
-      const fill = document.createElement("div"); fill.className = "b-fill";
-      fill.style.width = Math.max(2, (+r.impressions / cMax) * 100) + "%";
-      fill.style.background = "var(--klipy)";
-      track.appendChild(fill);
-      const v = document.createElement("div"); v.className = "b-val"; v.textContent = fmtShort(+r.impressions);
-      row.append(l, track, v); cEl.appendChild(row);
-    }
-
-    $("filters").addEventListener("click", (e) => {
-      const b = e.target.closest("button"); if (!b) return;
-      for (const x of $("filters").children) x.classList.toggle("active", x === b);
-      state.days = b.dataset.days ? +b.dataset.days : null;
-      render();
-    });
-    let rto; addEventListener("resize", () => { clearTimeout(rto); rto = setTimeout(render, 150); });
+    const latest = rows => rows.reduce((a, r) => r.snapshot_date > a ? r.snapshot_date : a, "");
+    const gvSnap = latest(gv), gbSnap = latest(gb), kcSnap = latest(kc);
+    const titles = new Map(gv.filter(r => r.snapshot_date === gvSnap).map(r => [r.gif_id, r.title]));
+    state.data = {
+      g: gd.map(r => ({ d: r.date, v: +r.views || 0 })),
+      k: kd.map(r => ({ d: r.date, v: +r.impressions || 0 })),
+      board: gb.filter(r => r.snapshot_date === gbSnap)
+        .map(r => ({ id: r.gif_id, views: +r.views || 0, title: titles.get(r.gif_id) || r.gif_id }))
+        .sort((a, b) => b.views - a.views),
+      countries: kc.filter(r => r.snapshot_date === kcSnap)
+        .map(r => ({ name: r.country, code: (r.country_code || "").toLowerCase(), v: +r.impressions || 0 }))
+        .sort((a, b) => b.v - a.v).slice(0, 10),
+    };
+    renderHero();
     render();
+    let rto; addEventListener("resize", () => { clearTimeout(rto); rto = setTimeout(renderChart, 150); });
   } catch (e) {
     const el = $("err"); el.style.display = "block";
-    el.textContent = "Failed to load stats data: " + e.message +
-      " — make sure this page is served by dashboard\\serve-dashboard.ps1 (port 8125) and the CSVs exist in data\\stats\\.";
+    el.textContent = "Failed to load stats data: " + e.message;
+    renderHero(); render();
   }
 }
 boot();
