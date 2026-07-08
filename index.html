@@ -49,6 +49,10 @@
   .range:hover { color: #ffffff; }
   .srcwrap { display: flex; background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 4px; gap: 4px; }
   .srctab { padding: 7px 20px; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer; color: #898781; background: transparent; }
+  .custombox { display: none; align-items: center; gap: 8px; }
+  .custombox span { color: #898781; font-size: 13px; }
+  .custombox input { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ffffff; padding: 6px 10px; font-family: inherit; font-size: 13px; color-scheme: dark; }
+  .custombox input:focus { outline: none; border-color: #898781; }
 
   /* big stats */
   .bigstats { display: flex; align-items: flex-start; justify-content: center; gap: 44px; padding: 40px 0 34px; }
@@ -138,6 +142,11 @@
 
     <div class="controls" id="sec-dash">
       <div class="ranges" id="ranges"></div>
+      <div class="custombox" id="customBox">
+        <input type="date" id="dateFrom" aria-label="Start date">
+        <span>–</span>
+        <input type="date" id="dateTo" aria-label="End date">
+      </div>
       <div class="srcwrap">
         <div class="srctab" id="tabGiphy">GIPHY</div>
         <div class="srctab" id="tabKlipy">KLIPY</div>
@@ -177,7 +186,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const ACC_GIPHY = ["#a985ff", "#ff6eb4"], ACC_KLIPY = ["#1d9c64", "#2bd889"];
-const state = { days: 30, source: "giphy", data: null };
+const state = { days: 30, source: "giphy", data: null, custom: null };
 
 const fmt = (n) => n.toLocaleString("en-US");
 const fmtShort = (n) => {
@@ -226,6 +235,18 @@ function sliceSeries() {
   const D = state.data;
   if (!D) return { cur: [], prev: [] };
   const full = state.source === "giphy" ? D.g : D.k;
+  if (state.days === "custom") {
+    const c = state.custom;
+    if (!c || !c.from || !c.to) return { cur: full, prev: [] };
+    const [a, b] = c.from <= c.to ? [c.from, c.to] : [c.to, c.from];
+    const si = full.findIndex(p => p.d >= a);
+    if (si === -1) return { cur: [], prev: [] };
+    let ei = full.length - 1;
+    while (ei >= si && full[ei].d > b) ei--;
+    if (ei < si) return { cur: [], prev: [] };
+    const cur = full.slice(si, ei + 1);
+    return { cur, prev: full.slice(Math.max(0, si - cur.length), si) };
+  }
   if (!state.days) return { cur: full, prev: [] };
   const end = Math.max(0, full.length - state.days);
   return { cur: full.slice(end), prev: full.slice(Math.max(0, end - state.days), end) };
@@ -356,8 +377,16 @@ function renderChart() {
   svg.addEventListener("pointerleave", hide);
 }
 
+function seedCustom() {
+  if (state.custom || !state.data) return;
+  const full = state.source === "giphy" ? state.data.g : state.data.k;
+  if (!full.length) return;
+  state.custom = { from: full[Math.max(0, full.length - 30)].d,
+                   to: full[full.length - 1].d };
+}
+
 // ---------- controls + stats ----------
-const RANGES = [["7D", 7], ["30D", 30], ["90D", 90], ["6M", 180], ["1Y", 365], ["All", null]];
+const RANGES = [["7D", 7], ["30D", 30], ["90D", 90], ["6M", 180], ["1Y", 365], ["All", null], ["Custom", "custom"]];
 function renderControls() {
   const [, accB] = accents();
   const el = $("ranges"); el.innerHTML = "";
@@ -367,8 +396,22 @@ function renderControls() {
     if (state.days === days) {
       d.style.color = "#ffffff"; d.style.fontWeight = "800"; d.style.borderBottomColor = accB;
     }
-    d.addEventListener("click", () => { state.days = days; render(); });
+    d.addEventListener("click", () => {
+      state.days = days;
+      if (days === "custom") seedCustom();
+      render();
+    });
     el.appendChild(d);
+  }
+  const box = $("customBox");
+  box.style.display = state.days === "custom" ? "flex" : "none";
+  if (state.days === "custom" && state.data) {
+    const full = state.source === "giphy" ? state.data.g : state.data.k;
+    if (full.length) {
+      const min = full[0].d, max = full[full.length - 1].d;
+      for (const id of ["dateFrom", "dateTo"]) { $(id).min = min; $(id).max = max; }
+    }
+    if (state.custom) { $("dateFrom").value = state.custom.from; $("dateTo").value = state.custom.to; }
   }
   const isGiphy = state.source === "giphy";
   const tg = $("tabGiphy"), tk = $("tabKlipy");
@@ -506,6 +549,15 @@ function scrollToSec(id) {
 async function boot() {
   $("tabGiphy").addEventListener("click", () => { state.source = "giphy"; render(); });
   $("tabKlipy").addEventListener("click", () => { state.source = "klipy"; render(); });
+  for (const id of ["dateFrom", "dateTo"]) {
+    $(id).addEventListener("change", () => {
+      const from = $("dateFrom").value, to = $("dateTo").value;
+      if (!from || !to) return;
+      state.custom = { from, to };
+      state.days = "custom";
+      render();
+    });
+  }
   $("navDash").addEventListener("click", () => scrollToSec("sec-dash"));
   $("navTop").addEventListener("click", () => {
     if (state.source !== "giphy") { state.source = "giphy"; render(); }
