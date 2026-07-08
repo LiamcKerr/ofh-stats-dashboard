@@ -6,6 +6,12 @@
 <title>OneFootball Heads — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/flatpickr.min.css">
+<link rel="stylesheet" href="vendor/flatpickr-dark.css">
+<link rel="stylesheet" href="vendor/glightbox.min.css">
+<script src="vendor/countUp.umd.js"></script>
+<script src="vendor/flatpickr.min.js"></script>
+<script src="vendor/glightbox.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { margin: 0; background: #0d0d0d; color: #ffffff; font-family: 'Archivo', system-ui, sans-serif; }
@@ -50,9 +56,9 @@
   .srcwrap { display: flex; background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 4px; gap: 4px; }
   .srctab { padding: 7px 20px; border-radius: 999px; font-size: 13px; font-weight: 800; cursor: pointer; color: #898781; background: transparent; }
   .custombox { display: none; align-items: center; gap: 8px; }
-  .custombox span { color: #898781; font-size: 13px; }
-  .custombox input { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ffffff; padding: 6px 10px; font-family: inherit; font-size: 13px; color-scheme: dark; }
+  .custombox input { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ffffff; padding: 6px 10px; font-family: inherit; font-size: 13px; width: 220px; cursor: pointer; }
   .custombox input:focus { outline: none; border-color: #898781; }
+  .flatpickr-calendar { font-family: 'Archivo', system-ui, sans-serif; }
 
   /* big stats */
   .bigstats { display: flex; align-items: flex-start; justify-content: center; gap: 44px; padding: 40px 0 34px; }
@@ -95,6 +101,12 @@
   .crow .c-val { text-align: right; font-variant-numeric: tabular-nums; color: #c3c2b7; }
 
   .err { background: #3a1d1d; border: 1px solid #6b3333; color: #f0c0c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; display: none; }
+
+  /* dark skin for the lightbox caption */
+  .glightbox-clean .gslide-description { background: #161616; }
+  .glightbox-clean .gdesc-inner .gslide-title { color: #ffffff; font-family: 'Archivo', system-ui, sans-serif; }
+  .glightbox-clean .gdesc-inner .gslide-desc { color: #c3c2b7; font-family: 'Archivo', system-ui, sans-serif; }
+  .glightbox-clean .gslide-desc a { color: #ff6eb4; }
 
   @media (max-width: 800px) { .sidebar { display: none; } .main { padding: 20px 16px 50px; } .hero-title { font-size: 32px; } }
 </style>
@@ -143,9 +155,7 @@
     <div class="controls" id="sec-dash">
       <div class="ranges" id="ranges"></div>
       <div class="custombox" id="customBox">
-        <input type="date" id="dateFrom" aria-label="Start date">
-        <span>–</span>
-        <input type="date" id="dateTo" aria-label="End date">
+        <input type="text" id="dateRange" placeholder="Select date range" readonly aria-label="Custom date range">
       </div>
       <div class="srcwrap">
         <div class="srctab" id="tabGiphy">GIPHY</div>
@@ -206,6 +216,20 @@ const niceCeil = (v) => {
   return 10 * p;
 };
 const accents = () => state.source === "klipy" ? ACC_KLIPY : ACC_GIPHY;
+const esc = (s) => s.replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// animated numbers via CountUp; plain textContent if the lib is unavailable or
+// the tab is hidden (rAF is suspended in background tabs, animation would stall)
+function animateNum(el, val, opts = {}) {
+  if (!document.hidden && window.countUp && countUp.CountUp) {
+    const c = new countUp.CountUp(el, val, { duration: 0.9, ...opts });
+    if (!c.error) { c.start(); return; }
+  }
+  el.textContent = opts.formattingFn ? opts.formattingFn(val) : fmt(val);
+}
+
+let fp = null;   // flatpickr instance for the custom range
 
 function parseCSV(text) {
   const rows = []; let row = [], field = "", inQ = false;
@@ -405,13 +429,13 @@ function renderControls() {
   }
   const box = $("customBox");
   box.style.display = state.days === "custom" ? "flex" : "none";
-  if (state.days === "custom" && state.data) {
+  if (state.days === "custom" && state.data && fp) {
     const full = state.source === "giphy" ? state.data.g : state.data.k;
     if (full.length) {
-      const min = full[0].d, max = full[full.length - 1].d;
-      for (const id of ["dateFrom", "dateTo"]) { $(id).min = min; $(id).max = max; }
+      fp.set("minDate", full[0].d);
+      fp.set("maxDate", full[full.length - 1].d);
     }
-    if (state.custom) { $("dateFrom").value = state.custom.from; $("dateTo").value = state.custom.to; }
+    if (state.custom) fp.setDate([state.custom.from, state.custom.to], false);
   }
   const isGiphy = state.source === "giphy";
   const tg = $("tabGiphy"), tk = $("tabKlipy");
@@ -428,9 +452,11 @@ function renderStats() {
   const isGiphy = state.source === "giphy";
   const sum = (s) => s.reduce((a, p) => a + p.v, 0);
   const curSum = sum(cur), prevSum = sum(prev);
-  $("statB").textContent = fmtShort(curSum);
+  const short = (n) => fmtShort(Math.round(n));
+  animateNum($("statB"), curSum, { formattingFn: short });
   $("statBLabel").textContent = isGiphy ? "GIF Views" : "GIF Impressions";
-  $("statC").textContent = fmtShort(cur.length ? Math.round(curSum / cur.length) : 0);
+  animateNum($("statC"), cur.length ? Math.round(curSum / cur.length) : 0,
+             { formattingFn: short });
   const deltaEl = $("delta");
   if (prev.length && prevSum > 0) {
     const pct = ((curSum - prevSum) / prevSum) * 100;
@@ -441,6 +467,22 @@ function renderStats() {
   } else deltaEl.style.display = "none";
   $("chartTitle").textContent = isGiphy ? "Total GIF Views" : "Daily Impressions";
   $("chartSub").textContent = isGiphy ? "GIPHY · daily views" : "KLIPY · daily impressions";
+}
+
+// ---------- gif lightbox ----------
+function openGifLightbox(startAt) {
+  if (!window.GLightbox || !state.data) return false;
+  const items = state.data.board.slice(0, 15).map(g => ({
+    href: `https://media.giphy.com/media/${g.id}/giphy.gif`,
+    type: "image",
+    title: esc(g.title),
+    description: `${fmt(g.views)} views · ` +
+      `<a href="https://giphy.com/gifs/${g.id}" target="_blank" rel="noopener">View on GIPHY ↗</a>`,
+  }));
+  const lb = GLightbox({ elements: items, startAt, loop: true });
+  lb.on("close", () => { try { lb.destroy(); } catch (_) {} });
+  lb.open();
+  return true;
 }
 
 // ---------- top section (podium + grid / country list) ----------
@@ -479,6 +521,9 @@ function renderTop() {
       if (place === 1) img.style.boxShadow = `0 6px 30px ${accB}44`;
       img.onerror = () => { img.style.visibility = "hidden"; };
       a.appendChild(img);
+      if (isGiphy) a.addEventListener("click", (e) => {
+        if (openGifLightbox(place - 1)) e.preventDefault();
+      });
       pod.appendChild(a);
     }
     const txt = document.createElement("div"); txt.style.textAlign = "center";
@@ -488,7 +533,7 @@ function renderTop() {
     }
     const v = document.createElement("div"); v.className = "pod-views";
     v.style.fontSize = (place === 1 ? 26 : 20) + "px";
-    v.textContent = it ? fmt(isGiphy ? it.views : it.v) : "";
+    if (it) animateNum(v, isGiphy ? it.views : it.v);
     txt.appendChild(v);
     pod.appendChild(txt);
     const block = document.createElement("div");
@@ -502,7 +547,7 @@ function renderTop() {
 
   if (isGiphy) {
     const grid = document.createElement("div"); grid.className = "gifgrid";
-    for (const g of D.board.slice(3, 15)) {
+    D.board.slice(3, 15).forEach((g, gi) => {
       const a = document.createElement("a");
       a.href = `https://giphy.com/gifs/${g.id}`; a.target = "_blank"; a.rel = "noopener";
       const img = document.createElement("img");
@@ -512,8 +557,11 @@ function renderTop() {
       const v = document.createElement("div"); v.className = "g-views";
       v.textContent = `${fmtShort(g.views)} views`;
       a.append(img, v);
+      a.addEventListener("click", (e) => {
+        if (openGifLightbox(gi + 3)) e.preventDefault();
+      });
       grid.appendChild(a);
-    }
+    });
     bodyEl.appendChild(grid);
   } else {
     const listCard = document.createElement("div"); listCard.className = "clist";
@@ -549,13 +597,17 @@ function scrollToSec(id) {
 async function boot() {
   $("tabGiphy").addEventListener("click", () => { state.source = "giphy"; render(); });
   $("tabKlipy").addEventListener("click", () => { state.source = "klipy"; render(); });
-  for (const id of ["dateFrom", "dateTo"]) {
-    $(id).addEventListener("change", () => {
-      const from = $("dateFrom").value, to = $("dateTo").value;
-      if (!from || !to) return;
-      state.custom = { from, to };
-      state.days = "custom";
-      render();
+  if (window.flatpickr) {
+    fp = flatpickr($("dateRange"), {
+      mode: "range",
+      dateFormat: "Y-m-d",
+      onChange: (dates, _str, inst) => {
+        if (dates.length !== 2) return;
+        state.custom = { from: inst.formatDate(dates[0], "Y-m-d"),
+                         to: inst.formatDate(dates[1], "Y-m-d") };
+        state.days = "custom";
+        render();
+      },
     });
   }
   $("navDash").addEventListener("click", () => scrollToSec("sec-dash"));
