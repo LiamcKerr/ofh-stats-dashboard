@@ -4,16 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OneFootball Heads — Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Archivo self-hosted (@fontsource 5.2.8, OFL-1.1) — same-origin so image
+     export can embed fonts; also removes the Google Fonts dependency -->
+<style>
+  @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 400; font-display: swap; src: url('vendor/fonts/archivo-latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 600; font-display: swap; src: url('vendor/fonts/archivo-latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 700; font-display: swap; src: url('vendor/fonts/archivo-latin-700-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 800; font-display: swap; src: url('vendor/fonts/archivo-latin-800-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Archivo'; font-style: normal; font-weight: 900; font-display: swap; src: url('vendor/fonts/archivo-latin-900-normal.woff2') format('woff2'); }
+</style>
 <link rel="stylesheet" href="vendor/flatpickr.min.css">
 <link rel="stylesheet" href="vendor/flatpickr-dark.css">
 <link rel="stylesheet" href="vendor/glightbox.min.css">
 <script src="vendor/countUp.umd.js"></script>
 <script src="vendor/flatpickr.min.js"></script>
 <script src="vendor/glightbox.min.js"></script>
+<script src="vendor/html-to-image.js"></script>
+<script src="vendor/confetti.browser.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body { margin: 0; background: #0d0d0d; color: #ffffff; font-family: 'Archivo', system-ui, sans-serif; }
   a { color: #ff6eb4; text-decoration: none; }
   a:hover { color: #ffffff; }
@@ -23,6 +33,7 @@
   .hero { position: relative; height: 200px; overflow: hidden; background: #0a0a0a; border-bottom: 1px solid rgba(255,255,255,0.1); }
   .hero-bg { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; }
   .hero-mq { display: flex; gap: 10px; animation: ofhmq 48s linear infinite; will-change: transform; padding-right: 10px; }
+  @media (prefers-reduced-motion: reduce) { .hero-mq { animation-play-state: paused; } }
   .hero-mq img { height: 156px; width: 156px; object-fit: cover; border-radius: 8px; flex: none; opacity: 0.9; }
   .hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(13,13,13,0.92) 100%); }
   .hero-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; }
@@ -102,6 +113,23 @@
 
   .err { background: #3a1d1d; border: 1px solid #6b3333; color: #f0c0c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; display: none; }
 
+  .data-stamp { text-align: right; color: #898781; font-size: 12px; margin-bottom: 10px; min-height: 15px; }
+
+  .dl-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #898781; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+  .dl-btn:hover { color: #ffffff; background: #242423; }
+
+  .totop {
+    position: fixed; right: 22px; bottom: 22px; z-index: 20; width: 42px; height: 42px;
+    border-radius: 999px; background: #1a1a19; border: 1px solid rgba(255,255,255,0.15);
+    color: #c3c2b7; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; text-decoration: none;
+  }
+  .totop:hover { color: #ffffff; background: #242423; }
+  @supports (animation-timeline: scroll()) {
+    .totop { animation: totop-fade linear both; animation-timeline: scroll(); animation-range: 0 300px; }
+  }
+  @keyframes totop-fade { from { opacity: 0; pointer-events: none; } to { opacity: 1; pointer-events: auto; } }
+
   /* dark skin for the lightbox caption */
   .glightbox-clean .gslide-description { background: #161616; }
   .glightbox-clean .gdesc-inner .gslide-title { color: #ffffff; font-family: 'Archivo', system-ui, sans-serif; }
@@ -114,7 +142,7 @@
 <body>
 
 <!-- ===== HERO ===== -->
-<div class="hero">
+<div class="hero" id="top">
   <div class="hero-bg" id="heroBg"></div>
   <div class="hero-shade"></div>
   <div class="hero-inner">
@@ -152,6 +180,8 @@
 
     <div class="err" id="err"></div>
 
+    <div class="data-stamp" id="dataStamp"></div>
+
     <div class="controls" id="sec-dash">
       <div class="ranges" id="ranges"></div>
       <div class="custombox" id="customBox">
@@ -176,9 +206,16 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2 id="chartTitle">Total GIF Views</h2>
-      <div class="h-sub" id="chartSub">GIPHY · daily views</div>
+    <div class="card" id="chartCard">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <div>
+          <h2 id="chartTitle">Total GIF Views</h2>
+          <div class="h-sub" id="chartSub">GIPHY · daily views</div>
+        </div>
+        <button class="dl-btn" id="dlChart" title="Download chart as image" aria-label="Download chart as image">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2 L8 10 M4.5 7 L8 10.5 L11.5 7 M3 13.5 L13 13.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+      </div>
       <div class="chart-wrap" id="chartWrap"></div>
     </div>
 
@@ -191,6 +228,8 @@
 
   </div></div>
 </div>
+
+<a class="totop" href="#top" aria-label="Back to top">↑</a>
 
 <script>
 "use strict";
@@ -219,10 +258,12 @@ const accents = () => state.source === "klipy" ? ACC_KLIPY : ACC_GIPHY;
 const esc = (s) => s.replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-// animated numbers via CountUp; plain textContent if the lib is unavailable or
-// the tab is hidden (rAF is suspended in background tabs, animation would stall)
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// animated numbers via CountUp; plain textContent if the lib is unavailable, the
+// user prefers reduced motion, or the tab is hidden (rAF suspended → stall at 0)
 function animateNum(el, val, opts = {}) {
-  if (!document.hidden && window.countUp && countUp.CountUp) {
+  if (!document.hidden && !reducedMotion() && window.countUp && countUp.CountUp) {
     const c = new countUp.CountUp(el, val, { duration: 0.9, ...opts });
     if (!c.error) { c.start(); return; }
   }
@@ -583,10 +624,40 @@ function renderTop() {
 }
 
 function render() {
-  renderControls();
-  renderStats();
-  renderChart();
-  renderTop();
+  const apply = () => { renderControls(); renderStats(); renderChart(); renderTop(); };
+  // native cross-fade between view states; skipped for reduced motion / hidden tabs
+  if (document.startViewTransition && !reducedMotion() && !document.hidden) {
+    document.startViewTransition(apply);
+  } else apply();
+}
+
+function renderStamp() {
+  const el = $("dataStamp");
+  const g = state.data && state.data.g;
+  if (!g || !g.length) { el.textContent = ""; return; }
+  const last = g[g.length - 1].d;
+  const [y, m, d] = last.split("-").map(Number);
+  const days = Math.round((Date.now() - new Date(y, m - 1, d).getTime()) / 86400000);
+  const rel = new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(-days, "day");
+  el.textContent = `Data through ${fmtTick(last, false)} · updated ${rel}`;
+}
+
+function checkMilestone() {
+  // one confetti burst when lifetime views cross into a new 25M bucket
+  if (!state.data) return;
+  try {
+    const total = state.data.board.reduce((a, g) => a + g.views, 0);
+    const bucket = Math.floor(total / 25e6);
+    const seen = localStorage.getItem("ofh-milestone");
+    if (seen === null) { localStorage.setItem("ofh-milestone", bucket); return; }
+    if (bucket > +seen) {
+      localStorage.setItem("ofh-milestone", bucket);
+      if (window.confetti && !document.hidden) {
+        confetti({ particleCount: 160, spread: 75, origin: { y: 0.3 },
+                   disableForReducedMotion: true });
+      }
+    }
+  } catch (_) { /* localStorage unavailable - skip */ }
 }
 
 function scrollToSec(id) {
@@ -619,33 +690,63 @@ async function boot() {
     if (state.source !== "klipy") { state.source = "klipy"; render(); }
     setTimeout(() => scrollToSec("sec-top"), 120);
   });
+  $("dlChart").addEventListener("click", async () => {
+    if (!window.htmlToImage) return;
+    try {
+      const url = await htmlToImage.toPng($("chartCard"), {
+        pixelRatio: 2, backgroundColor: "#1a1a19",
+        filter: (n) => n.id !== "dlChart",
+      });
+      const a = document.createElement("a");
+      a.href = url;
+      const range = state.days === "custom" ? "custom" : (state.days ? state.days + "d" : "all");
+      a.download = `ofh-${state.source}-${range}-${new Date().toISOString().slice(0, 10)}.png`;
+      a.click();
+    } catch (e) { console.warn("chart export failed:", e.message); }
+  });
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState !== "visible") return;
+    if (Date.now() - lastFetch < 5 * 60 * 1000) return;
+    try {
+      await loadData();
+      renderHero(); render(); checkMilestone();
+    } catch (e) { console.warn("background refresh failed:", e.message); }
+  });
   try {
-    const [gd, kd, gv, gb, kc] = await Promise.all([
-      getCSV("giphy-daily.csv"), getCSV("klipy-impressions-daily.csv"),
-      getCSV("giphy-views.csv"), getCSV("giphy-leaderboard.csv"),
-      getCSV("klipy-top-countries.csv"),
-    ]);
-    const latest = rows => rows.reduce((a, r) => r.snapshot_date > a ? r.snapshot_date : a, "");
-    const gvSnap = latest(gv), gbSnap = latest(gb), kcSnap = latest(kc);
-    const titles = new Map(gv.filter(r => r.snapshot_date === gvSnap).map(r => [r.gif_id, r.title]));
-    state.data = {
-      g: gd.map(r => ({ d: r.date, v: +r.views || 0 })),
-      k: kd.map(r => ({ d: r.date, v: +r.impressions || 0 })),
-      board: gb.filter(r => r.snapshot_date === gbSnap)
-        .map(r => ({ id: r.gif_id, views: +r.views || 0, title: titles.get(r.gif_id) || r.gif_id }))
-        .sort((a, b) => b.views - a.views),
-      countries: kc.filter(r => r.snapshot_date === kcSnap)
-        .map(r => ({ name: r.country, code: (r.country_code || "").toLowerCase(), v: +r.impressions || 0 }))
-        .sort((a, b) => b.v - a.v).slice(0, 10),
-    };
+    await loadData();
     renderHero();
     render();
+    checkMilestone();
     let rto; addEventListener("resize", () => { clearTimeout(rto); rto = setTimeout(renderChart, 150); });
   } catch (e) {
     const el = $("err"); el.style.display = "block";
     el.textContent = "Failed to load stats data: " + e.message;
     renderHero(); render();
   }
+}
+
+let lastFetch = 0;
+async function loadData() {
+  const [gd, kd, gv, gb, kc] = await Promise.all([
+    getCSV("giphy-daily.csv"), getCSV("klipy-impressions-daily.csv"),
+    getCSV("giphy-views.csv"), getCSV("giphy-leaderboard.csv"),
+    getCSV("klipy-top-countries.csv"),
+  ]);
+  const latest = rows => rows.reduce((a, r) => r.snapshot_date > a ? r.snapshot_date : a, "");
+  const gvSnap = latest(gv), gbSnap = latest(gb), kcSnap = latest(kc);
+  const titles = new Map(gv.filter(r => r.snapshot_date === gvSnap).map(r => [r.gif_id, r.title]));
+  state.data = {
+    g: gd.map(r => ({ d: r.date, v: +r.views || 0 })),
+    k: kd.map(r => ({ d: r.date, v: +r.impressions || 0 })),
+    board: gb.filter(r => r.snapshot_date === gbSnap)
+      .map(r => ({ id: r.gif_id, views: +r.views || 0, title: titles.get(r.gif_id) || r.gif_id }))
+      .sort((a, b) => b.views - a.views),
+    countries: kc.filter(r => r.snapshot_date === kcSnap)
+      .map(r => ({ name: r.country, code: (r.country_code || "").toLowerCase(), v: +r.impressions || 0 }))
+      .sort((a, b) => b.v - a.v).slice(0, 10),
+  };
+  lastFetch = Date.now();
+  renderStamp();
 }
 boot();
 </script>
