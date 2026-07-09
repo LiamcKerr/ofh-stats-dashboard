@@ -113,8 +113,6 @@
 
   .err { background: #3a1d1d; border: 1px solid #6b3333; color: #f0c0c0; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 13px; display: none; }
 
-  .data-stamp { text-align: right; color: #898781; font-size: 12px; margin-bottom: 10px; min-height: 15px; }
-
   .dl-btn { background: transparent; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #898781; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
   .dl-btn:hover { color: #ffffff; background: #242423; }
 
@@ -179,8 +177,6 @@
   <div class="main"><div class="main-inner">
 
     <div class="err" id="err"></div>
-
-    <div class="data-stamp" id="dataStamp"></div>
 
     <div class="controls" id="sec-dash">
       <div class="ranges" id="ranges"></div>
@@ -635,17 +631,6 @@ function render() {
   } else apply();
 }
 
-function renderStamp() {
-  const el = $("dataStamp");
-  const g = state.data && state.data.g;
-  if (!g || !g.length) { el.textContent = ""; return; }
-  const last = g[g.length - 1].d;
-  const [y, m, d] = last.split("-").map(Number);
-  const days = Math.round((Date.now() - new Date(y, m - 1, d).getTime()) / 86400000);
-  const rel = new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(-days, "day");
-  el.textContent = `Data through ${fmtTick(last, false)} · updated ${rel}`;
-}
-
 function checkMilestone() {
   // one confetti burst when lifetime views cross into a new 25M bucket
   if (!state.data) return;
@@ -750,7 +735,6 @@ async function loadData() {
       .sort((a, b) => b.v - a.v).slice(0, 10),
   };
   lastFetch = Date.now();
-  renderStamp();
 }
 boot();
 </script>
