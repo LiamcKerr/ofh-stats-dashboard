@@ -330,7 +330,9 @@ function renderHero() {
   const mq = document.createElement("div"); mq.className = "hero-mq";
   for (const id of [...ids, ...ids]) {
     const img = document.createElement("img");
-    img.src = `https://media.giphy.com/media/${id}/200w.gif`;
+    // static still: the strip itself scrolls, animated frames would be ~30x
+    // the bytes + constant decode CPU for no visible benefit
+    img.src = `https://media.giphy.com/media/${id}/200w_s.gif`;
     img.alt = "";
     img.onerror = () => { img.style.visibility = "hidden"; };
     mq.appendChild(img);
@@ -554,7 +556,7 @@ function renderTop() {
       a.target = "_blank"; a.rel = "noopener";
       a.style.cssText = "display:block;width:100%";
       const img = document.createElement("img");
-      img.src = isGiphy ? `https://media.giphy.com/media/${it.id}/200w.gif`
+      img.src = isGiphy ? `https://media.giphy.com/media/${it.id}/200w.webp`
                         : `https://flagcdn.com/w320/${it.code}.png`;
       img.alt = isGiphy ? it.title : it.name;
       img.style.aspectRatio = isGiphy ? "1" : "4 / 3";
@@ -592,7 +594,7 @@ function renderTop() {
       const a = document.createElement("a");
       a.href = `https://giphy.com/gifs/${g.id}`; a.target = "_blank"; a.rel = "noopener";
       const img = document.createElement("img");
-      img.src = `https://media.giphy.com/media/${g.id}/200w.gif`;
+      img.src = `https://media.giphy.com/media/${g.id}/200w.webp`;
       img.alt = g.title; img.loading = "lazy";
       img.onerror = () => { img.style.visibility = "hidden"; };
       const v = document.createElement("div"); v.className = "g-views";
