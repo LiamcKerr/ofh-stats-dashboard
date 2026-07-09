@@ -34,7 +34,7 @@
   .hero-bg { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; }
   .hero-mq { display: flex; gap: 10px; animation: ofhmq 48s linear infinite; will-change: transform; padding-right: 10px; }
   @media (prefers-reduced-motion: reduce) { .hero-mq { animation-play-state: paused; } }
-  .hero-mq img { height: 156px; width: 156px; object-fit: cover; border-radius: 8px; flex: none; opacity: 0.9; }
+  .hero-mq img, .hero-mq video { height: 156px; width: 156px; object-fit: cover; border-radius: 8px; flex: none; opacity: 0.9; }
   .hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.35) 45%, rgba(13,13,13,0.92) 100%); }
   .hero-inner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; }
   .hero-title { font-size: 46px; line-height: 1; letter-spacing: -1.5px; text-shadow: 0 2px 24px rgba(0,0,0,0.6); }
@@ -329,13 +329,15 @@ function renderHero() {
   const ids = D.board.slice(0, 14).map(g => g.id);
   const mq = document.createElement("div"); mq.className = "hero-mq";
   for (const id of [...ids, ...ids]) {
-    const img = document.createElement("img");
-    // static still: the strip itself scrolls, animated frames would be ~30x
-    // the bytes + constant decode CPU for no visible benefit
-    img.src = `https://media.giphy.com/media/${id}/200w_s.gif`;
-    img.alt = "";
-    img.onerror = () => { img.style.visibility = "hidden"; };
-    mq.appendChild(img);
+    // mp4 tiles: animated like the gifs but ~59KB vs ~454KB each, and
+    // hardware-decoded instead of burning CPU on gif frames
+    const v = document.createElement("video");
+    v.src = `https://media.giphy.com/media/${id}/200w.mp4`;
+    v.muted = true; v.loop = true; v.playsInline = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    if (!reducedMotion()) { v.autoplay = true; v.setAttribute("autoplay", ""); }
+    v.onerror = () => { v.style.visibility = "hidden"; };
+    mq.appendChild(v);
   }
   el.appendChild(mq);
 }
