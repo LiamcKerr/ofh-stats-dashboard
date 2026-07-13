@@ -11,6 +11,31 @@ $files = @("giphy-daily.csv", "giphy-views.csv", "giphy-leaderboard.csv",
 foreach ($f in $files) {
   Copy-Item (Join-Path $stats $f) (Join-Path $repo "data\$f") -Force
 }
+
+# also copy the monthly totals (used by the Google Sheet's Giphy Monthly tab)
+Copy-Item (Join-Path $stats "giphy-monthly.csv") (Join-Path $repo "data\giphy-monthly.csv") -Force
+
+# sheet-shaped exports: the Google Sheet tabs mirror the Excel workbook's
+# transformed layouts (latest snapshot only, reordered columns), so IMPORTDATA
+# needs these pre-shaped CSVs rather than the raw snapshot-accumulating ones
+function Latest-Snapshot($rows) {
+  $snap = ($rows | Measure-Object -Property snapshot_date -Maximum).Maximum
+  $rows | Where-Object { $_.snapshot_date -eq $snap }
+}
+$gv = Latest-Snapshot (Import-Csv (Join-Path $stats "giphy-views.csv"))
+$gv | Sort-Object { [int]$_.views } -Descending |
+  Select-Object gif_id, title, kind, created, views |
+  Export-Csv (Join-Path $repo "data\sheet-giphy-gifs.csv") -NoTypeInformation
+$ki = Latest-Snapshot (Import-Csv (Join-Path $stats "klipy-items.csv"))
+$ki | Sort-Object { [int]$_.impressions } -Descending |
+  Select-Object title, type, impressions, views,
+                @{n = "approved"; e = { $_.review_approved }}, slug |
+  Export-Csv (Join-Path $repo "data\sheet-klipy-items.csv") -NoTypeInformation
+$kc = Latest-Snapshot (Import-Csv (Join-Path $stats "klipy-top-countries.csv"))
+$kc | Sort-Object { [int]$_.impressions } -Descending |
+  Select-Object country, @{n = "code"; e = { $_.country_code }}, impressions |
+  Export-Csv (Join-Path $repo "data\sheet-klipy-countries.csv") -NoTypeInformation
+
 Set-Location $repo
 git add -A
 if (git status --porcelain) {
