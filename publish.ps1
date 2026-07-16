@@ -36,6 +36,24 @@ $kc | Sort-Object { [int]$_.impressions } -Descending |
   Select-Object country, @{n = "code"; e = { $_.country_code }}, impressions |
   Export-Csv (Join-Path $repo "data\sheet-klipy-countries.csv") -NoTypeInformation
 
+# combined daily series: giphy views + klipy impressions joined on date
+$gd = Import-Csv (Join-Path $stats "giphy-daily.csv")
+$kd = Import-Csv (Join-Path $stats "klipy-impressions-daily.csv")
+$byDate = @{}
+foreach ($r in $gd) { $byDate[$r.date] = @{ g = [int64]$r.views; k = [int64]0 } }
+foreach ($r in $kd) {
+  if (-not $byDate.ContainsKey($r.date)) { $byDate[$r.date] = @{ g = [int64]0; k = [int64]0 } }
+  $byDate[$r.date].k = [int64]$r.impressions
+}
+$byDate.Keys | Sort-Object | ForEach-Object {
+  [pscustomobject]@{
+    date              = $_
+    giphy_views       = $byDate[$_].g
+    klipy_impressions = $byDate[$_].k
+    combined          = $byDate[$_].g + $byDate[$_].k
+  }
+} | Export-Csv (Join-Path $repo "data\sheet-combined-daily.csv") -NoTypeInformation
+
 Set-Location $repo
 git add -A
 if (git status --porcelain) {
