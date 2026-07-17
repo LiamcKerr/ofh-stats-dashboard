@@ -315,8 +315,18 @@ function sliceSeries() {
     return { cur, prev: full.slice(Math.max(0, si - cur.length), si) };
   }
   if (!state.days) return { cur: full, prev: [] };
-  const end = Math.max(0, full.length - state.days);
-  return { cur: full.slice(end), prev: full.slice(Math.max(0, end - state.days), end) };
+  // calendar-date windows anchored to the newest date across BOTH platforms, so
+  // GIPHY + KLIPY always sum exactly to ALL for the same labelled range (row-based
+  // slicing drifted: the two series end on different dates)
+  const endIso = D.c[D.c.length - 1].d;
+  const endMs = new Date(endIso + "T00:00:00Z").getTime();
+  const isoDaysAgo = (n) => new Date(endMs - n * 86400000).toISOString().slice(0, 10);
+  const from = isoDaysAgo(state.days - 1);
+  const prevFrom = isoDaysAgo(2 * state.days - 1);
+  return {
+    cur: full.filter(p => p.d >= from && p.d <= endIso),
+    prev: full.filter(p => p.d >= prevFrom && p.d < from),
+  };
 }
 
 // ---------- hero marquee ----------
