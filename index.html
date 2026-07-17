@@ -186,6 +186,7 @@
       <div class="srcwrap">
         <div class="srctab" id="tabGiphy">GIPHY</div>
         <div class="srctab" id="tabKlipy">KLIPY</div>
+        <div class="srctab" id="tabAll">ALL</div>
       </div>
     </div>
 
@@ -230,7 +231,8 @@
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
-const ACC_GIPHY = ["#a985ff", "#ff6eb4"], ACC_KLIPY = ["#1d9c64", "#2bd889"];
+const ACC_GIPHY = ["#a985ff", "#ff6eb4"], ACC_KLIPY = ["#1d9c64", "#2bd889"],
+      ACC_ALL = ["#a985ff", "#2bd889"];   // purple -> green: both platforms
 const state = { days: 30, source: "giphy", data: null, custom: null };
 
 const fmt = (n) => n.toLocaleString("en-US");
@@ -250,7 +252,8 @@ const niceCeil = (v) => {
   for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
   return 10 * p;
 };
-const accents = () => state.source === "klipy" ? ACC_KLIPY : ACC_GIPHY;
+const accents = () => state.source === "klipy" ? ACC_KLIPY
+                    : state.source === "combined" ? ACC_ALL : ACC_GIPHY;
 const esc = (s) => s.replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -292,10 +295,13 @@ const getCSV = (name) => fetch(`data/${name}`).then(r => {
   return r.text();
 }).then(parseCSV);
 
+const seriesFor = (D) => state.source === "giphy" ? D.g
+                       : state.source === "klipy" ? D.k : D.c;
+
 function sliceSeries() {
   const D = state.data;
   if (!D) return { cur: [], prev: [] };
-  const full = state.source === "giphy" ? D.g : D.k;
+  const full = seriesFor(D);
   if (state.days === "custom") {
     const c = state.custom;
     if (!c || !c.from || !c.to) return { cur: full, prev: [] };
@@ -354,7 +360,8 @@ function renderChart() {
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", isGiphy ? "GIPHY daily views line chart" : "KLIPY daily impressions line chart");
+  svg.setAttribute("aria-label", state.source === "combined" ? "Combined daily total line chart"
+    : isGiphy ? "GIPHY daily views line chart" : "KLIPY daily impressions line chart");
 
   const defs = document.createElementNS(NS, "defs");
   defs.innerHTML =
@@ -434,7 +441,7 @@ function renderChart() {
     dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.v));
     dot.style.display = "";
     tDate.textContent = fmtDate(p.d);
-    tVal.textContent = `${fmt(p.v)} ${isGiphy ? "Views" : "Impressions"}`;
+    tVal.textContent = `${fmt(p.v)} ${state.source === "combined" ? "Total" : isGiphy ? "Views" : "Impressions"}`;
     tip.style.display = "block";
     tip.style.left = (x(i) / W * 100) + "%";
     tip.style.top = (y(p.v) / H * 100) + "%";
@@ -471,19 +478,20 @@ function renderControls() {
   const box = $("customBox");
   box.style.display = state.days === "custom" ? "flex" : "none";
   if (state.days === "custom" && state.data && fp) {
-    const full = state.source === "giphy" ? state.data.g : state.data.k;
+    const full = seriesFor(state.data);
     if (full.length) {
       fp.set("minDate", full[0].d);
       fp.set("maxDate", full[full.length - 1].d);
     }
     if (state.custom) fp.setDate([state.custom.from, state.custom.to], false);
   }
-  const isGiphy = state.source === "giphy";
-  const tg = $("tabGiphy"), tk = $("tabKlipy");
-  tg.style.background = isGiphy ? `linear-gradient(90deg, ${ACC_GIPHY[0]}, ${ACC_GIPHY[1]})` : "transparent";
-  tg.style.color = isGiphy ? "#ffffff" : "#898781";
-  tk.style.background = !isGiphy ? `linear-gradient(90deg, ${ACC_KLIPY[0]}, ${ACC_KLIPY[1]})` : "transparent";
-  tk.style.color = !isGiphy ? "#ffffff" : "#898781";
+  for (const [id, src, acc] of [["tabGiphy", "giphy", ACC_GIPHY],
+                                ["tabKlipy", "klipy", ACC_KLIPY],
+                                ["tabAll", "combined", ACC_ALL]]) {
+    const el = $(id), active = state.source === src;
+    el.style.background = active ? `linear-gradient(90deg, ${acc[0]}, ${acc[1]})` : "transparent";
+    el.style.color = active ? "#ffffff" : "#898781";
+  }
   $("navDashIcon").setAttribute("stroke", accB);
   $("heroSub").style.color = accB;
 }
@@ -495,7 +503,8 @@ function renderStats() {
   const curSum = sum(cur), prevSum = sum(prev);
   const short = (n) => fmtShort(Math.round(n));
   animateNum($("statB"), curSum, { formattingFn: short });
-  $("statBLabel").textContent = isGiphy ? "GIF Views" : "GIF Impressions";
+  $("statBLabel").textContent = state.source === "combined" ? "Views + Impressions"
+                              : isGiphy ? "GIF Views" : "GIF Impressions";
   animateNum($("statC"), cur.length ? Math.round(curSum / cur.length) : 0,
              { formattingFn: short });
   const deltaEl = $("delta");
@@ -506,8 +515,10 @@ function renderStats() {
     v.style.color = pct >= 0 ? "#2bd889" : "#e66767";
     deltaEl.style.display = "";
   } else deltaEl.style.display = "none";
-  $("chartTitle").textContent = isGiphy ? "Total GIF Views" : "Daily Impressions";
-  $("chartSub").textContent = isGiphy ? "GIPHY · daily views" : "KLIPY · daily impressions";
+  $("chartTitle").textContent = state.source === "combined" ? "Combined Daily Total"
+                              : isGiphy ? "Total GIF Views" : "Daily Impressions";
+  $("chartSub").textContent = state.source === "combined" ? "GIPHY views + KLIPY impressions"
+                            : isGiphy ? "GIPHY · daily views" : "KLIPY · daily impressions";
 }
 
 // ---------- gif lightbox ----------
@@ -529,7 +540,8 @@ function openGifLightbox(startAt) {
 // ---------- top section (podium + grid / country list) ----------
 function renderTop() {
   const D = state.data;
-  const isGiphy = state.source === "giphy";
+  // combined mode keeps the GIPHY top section (the countries view stays KLIPY's)
+  const isGiphy = state.source !== "klipy";
   const [accA, accB] = accents();
   $("topTitle").textContent = isGiphy ? "Top GIFs" : "Top Countries on KLIPY";
   $("topSub").textContent = isGiphy ? "GIPHY · all-time views" : "KLIPY · all-time impressions";
@@ -657,6 +669,7 @@ function scrollToSec(id) {
 async function boot() {
   $("tabGiphy").addEventListener("click", () => { state.source = "giphy"; render(); });
   $("tabKlipy").addEventListener("click", () => { state.source = "klipy"; render(); });
+  $("tabAll").addEventListener("click", () => { state.source = "combined"; render(); });
   if (window.flatpickr) {
     fp = flatpickr($("dateRange"), {
       mode: "range",
@@ -724,9 +737,15 @@ async function loadData() {
   const latest = rows => rows.reduce((a, r) => r.snapshot_date > a ? r.snapshot_date : a, "");
   const gvSnap = latest(gv), gbSnap = latest(gb), kcSnap = latest(kc);
   const titles = new Map(gv.filter(r => r.snapshot_date === gvSnap).map(r => [r.gif_id, r.title]));
+  const g = gd.map(r => ({ d: r.date, v: +r.views || 0 }));
+  const k = kd.map(r => ({ d: r.date, v: +r.impressions || 0 }));
+  const cmap = new Map();
+  for (const p of g) cmap.set(p.d, p.v);
+  for (const p of k) cmap.set(p.d, (cmap.get(p.d) || 0) + p.v);
   state.data = {
-    g: gd.map(r => ({ d: r.date, v: +r.views || 0 })),
-    k: kd.map(r => ({ d: r.date, v: +r.impressions || 0 })),
+    g, k,
+    c: [...cmap.entries()].map(([d, v]) => ({ d, v }))
+        .sort((a, b) => (a.d < b.d ? -1 : 1)),
     board: gb.filter(r => r.snapshot_date === gbSnap)
       .map(r => ({ id: r.gif_id, views: +r.views || 0, title: titles.get(r.gif_id) || r.gif_id }))
       .sort((a, b) => b.views - a.views),
