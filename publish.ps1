@@ -12,6 +12,12 @@ foreach ($f in $files) {
   Copy-Item (Join-Path $stats $f) (Join-Path $repo "data\$f") -Force
 }
 
+# velocity/category scorecard (optional - built by build-content-scorecard.py)
+foreach ($f in @("content-scorecard.csv", "category-summary.csv")) {
+  $src = Join-Path $stats $f
+  if (Test-Path $src) { Copy-Item $src (Join-Path $repo "data\$f") -Force }
+}
+
 # also copy the monthly totals (used by the Google Sheet's Giphy Monthly tab)
 Copy-Item (Join-Path $stats "giphy-monthly.csv") (Join-Path $repo "data\giphy-monthly.csv") -Force
 
