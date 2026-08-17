@@ -315,10 +315,15 @@ function sliceSeries() {
     return { cur, prev: full.slice(Math.max(0, si - cur.length), si) };
   }
   if (!state.days) return { cur: full, prev: [] };
-  // calendar-date windows anchored to the newest date across BOTH platforms, so
-  // GIPHY + KLIPY always sum exactly to ALL for the same labelled range (row-based
-  // slicing drifted: the two series end on different dates)
-  const endIso = D.c[D.c.length - 1].d;
+  // calendar-date windows anchored to the last date BOTH platforms have reported:
+  // GIPHY lags a day and KLIPY writes a partial row on pull morning, so the newest
+  // overall date is an incomplete day. Ending on the last full day keeps ranges to
+  // whole days ("7D" = the 7 days before the weekly pull) and GIPHY + KLIPY still
+  // sum exactly to ALL for the same labelled range.
+  const lastOf = (s) => s.length ? s[s.length - 1].d : null;
+  const lastG = lastOf(D.g), lastK = lastOf(D.k);
+  const endIso = lastG && lastK ? (lastG < lastK ? lastG : lastK)
+                                : (lastG || lastK || lastOf(D.c));
   const endMs = new Date(endIso + "T00:00:00Z").getTime();
   const isoDaysAgo = (n) => new Date(endMs - n * 86400000).toISOString().slice(0, 10);
   const from = isoDaysAgo(state.days - 1);
