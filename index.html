@@ -88,6 +88,33 @@
   .tooltip .t-date { color: #52514e; font-size: 11px; }
   .tooltip .t-val { font-size: 15px; font-weight: 800; margin-top: 1px; }
 
+  /* sidebar group labels */
+  .side-label { padding: 10px 12px 4px; font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #52514e; text-transform: uppercase; }
+
+  /* short-form monetisation */
+  .sfgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+  .sfcard { background: #1a1a19; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px 20px 10px; }
+  .sfcard h3 { font-size: 17px; font-weight: 800; }
+  .sfcard .sfprog { font-size: 11.5px; color: #898781; margin: 2px 0 16px; }
+  .mreq { margin: 0 0 16px; }
+  .mbar { height: 6px; background: #2c2c2a; border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
+  .mbar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #a985ff, #ff6eb4); }
+  .mbar.met i { background: #2bd889; }
+  .mbar.unknown { background: transparent; border: 1px dashed #52514e; height: 5px; }
+  .mrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .mlab { font-size: 14px; font-weight: 600; }
+  .mlab small { display: block; font-weight: 400; color: #898781; font-size: 12px; margin-top: 1px; }
+  .mtarget { font-size: 13.5px; color: #898781; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .mchip { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; border-radius: 4px; padding: 2px 6px; margin-left: 7px; vertical-align: 1px; }
+  .mchip.met { background: rgba(43,216,137,0.12); color: #2bd889; }
+  .mchip.need { background: rgba(242,178,92,0.12); color: #f2b25c; }
+  .mdivider { text-align: center; color: #898781; font-size: 12.5px; margin: 14px 0; font-weight: 600; }
+  .sfnote { background: #161616; border-left: 3px solid #f2b25c; border-radius: 0 8px 8px 0; padding: 10px 12px; margin: 14px 0 8px; font-size: 12.5px; color: #c3c2b7; }
+  .sfnote b { color: #f2b25c; }
+  .sfnote.blue { border-left-color: #ff6eb4; }
+  .sfnote.blue b { color: #ff6eb4; }
+  @media (max-width: 900px) { .sfgrid { grid-template-columns: 1fr; } }
+
   /* top section */
   .topsec { margin-top: 34px; }
   .toptitle { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
@@ -155,6 +182,7 @@
   <div class="sidebar">
     <div class="side-avatar"><img src="avatar.jpg" alt="OneFootball Heads avatar"></div>
     <div class="side-nav">
+      <div class="side-label">Gifs</div>
       <div class="navitem primary" id="navDash">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path id="navDashIcon" d="M1 11 L5 11 L7 5 L10 14 L12 8 L13.5 11 L17 11" stroke="#ff6eb4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         My Dashboard
@@ -166,6 +194,12 @@
       <div class="navitem" id="navCountries">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#898781" stroke-width="1.8"></circle><path d="M2 9 L16 9 M9 2 C6 6 6 12 9 16 C12 12 12 6 9 2" stroke="#898781" stroke-width="1.8"></path></svg>
         Countries
+      </div>
+      <div class="side-div"></div>
+      <div class="side-label">Short Form</div>
+      <div class="navitem" id="navShort">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 15 L3 10 M7.5 15 L7.5 6 M12 15 L12 11 M16 15 L16 3" stroke="#898781" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        Monetisation
       </div>
       <div class="side-div"></div>
       <a class="extlink" href="https://giphy.com/onefootballheads" target="_blank" rel="noopener"><span class="badge">G</span> GIPHY Channel</a>
@@ -221,6 +255,77 @@
       <div class="topsub" id="topSub">GIPHY · all-time views</div>
       <div class="podium" id="podium"></div>
       <div id="topBody"></div>
+    </div>
+
+    <div class="topsec" id="sec-shortform">
+      <div class="toptitle">Short Form</div>
+      <div class="topsub">Path to monetisation · thresholds verified Aug 2026 · dashed bars need numbers</div>
+      <div class="sfgrid">
+
+        <div class="sfcard">
+          <h3>TikTok</h3>
+          <div class="sfprog">Creator Rewards Program · UK eligible · only 60s+ videos earn (~$0.40–1.00 / 1k views)</div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Followers <span class="mchip need">NEED NUMBER</span></div><div class="mtarget">10,000</div></div>
+          </div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Video views <span class="mchip need">NEED NUMBER</span><small>last 30 days</small></div><div class="mtarget">100,000</div></div>
+          </div>
+        </div>
+
+        <div class="sfcard">
+          <h3>YouTube</h3>
+          <div class="sfprog">YPP Tier 1 (fan funding) → Tier 2 (Shorts ad share) · thresholds double Feb 2027</div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Subscribers <span class="mchip need">NEED NUMBER</span></div><div class="mtarget">500 → 1,000</div></div>
+          </div>
+          <div class="mreq">
+            <div class="mbar met"><i style="width:100%"></i></div>
+            <div class="mrow"><div class="mlab">Video uploads <span class="mchip met">✓ MET</span><small>3 of 3 · last 90 days</small></div><div class="mtarget">3</div></div>
+          </div>
+          <div class="mdivider">and one of the following</div>
+          <div class="mreq">
+            <div class="mbar"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Qualified watch hours<small>0 · last 365 days · Shorts feed views don't count</small></div><div class="mtarget">3,000 → 4,000</div></div>
+          </div>
+          <div class="mreq">
+            <div class="mbar"><i style="width:0.26%"></i></div>
+            <div class="mrow"><div class="mlab">Qualified Shorts views<small>7.9k · last 90 days · 0.26% to Tier 1</small></div><div class="mtarget">3M → 10M</div></div>
+          </div>
+        </div>
+
+        <div class="sfcard">
+          <h3>Instagram</h3>
+          <div class="sfprog">Gifts on Reels at 500 followers · Bonuses programme is invite-only (~10k territory)</div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Followers <span class="mchip need">NEED NUMBER</span><small>Gifts threshold</small></div><div class="mtarget">500</div></div>
+          </div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Followers <span class="mchip need">NEED NUMBER</span><small>typical Bonuses-invite territory</small></div><div class="mtarget">~10,000</div></div>
+          </div>
+        </div>
+
+        <div class="sfcard">
+          <h3>Snapchat</h3>
+          <div class="sfprog">Monetization Program · invite-based even when eligible · 1min+ Spotlight videos earn</div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">Followers <span class="mchip need">NEED NUMBER</span></div><div class="mtarget">50,000</div></div>
+          </div>
+          <div class="mreq">
+            <div class="mbar unknown"><i style="width:0%"></i></div>
+            <div class="mrow"><div class="mlab">View-time hours <span class="mchip need">NEED NUMBER</span><small>last 28 days · 3k must be Spotlight</small></div><div class="mtarget">15,000</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="sfnote blue"><b>The compilation play:</b> one weekly 60–180s compilation of the week's shorts is TikTok-Rewards-eligible (60s+ earns), builds YouTube WATCH HOURS (Shorts feed views never do), and costs zero new generation. Highest-leverage move on this board.</div>
+      <div class="sfnote"><b>Clock running:</b> Feb 1 2027 — YouTube thresholds double to 8,000 watch hours / 20M Shorts views. Crossing before then is half the work.</div>
     </div>
 
   </div></div>
@@ -699,6 +804,7 @@ async function boot() {
     });
   }
   $("navDash").addEventListener("click", () => scrollToSec("sec-dash"));
+  $("navShort").addEventListener("click", () => scrollToSec("sec-shortform"));
   $("navTop").addEventListener("click", () => {
     if (state.source !== "giphy") { state.source = "giphy"; render(); }
     setTimeout(() => scrollToSec("sec-top"), 120);
