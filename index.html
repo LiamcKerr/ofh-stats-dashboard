@@ -114,6 +114,9 @@
   .sfnote.blue { border-left-color: #ff6eb4; }
   .sfnote.blue b { color: #ff6eb4; }
   .srctab.sfon { background: #2c2c2a; color: #ffffff; }
+  .view { display: none; }
+  .view.on { display: block; }
+  .navitem.cur { background: #202020; color: #ffffff; }
   .sf-empty { padding: 46px 0 56px; color: #898781; font-size: 13px; text-align: center; }
   .sf-empty b { color: #c3c2b7; }
   @media (max-width: 900px) { .sfgrid { grid-template-columns: 1fr; } }
@@ -219,6 +222,7 @@
 
     <div class="err" id="err"></div>
 
+    <div class="view on" id="view-gifs">
     <div class="controls" id="sec-dash">
       <div class="ranges" id="ranges"></div>
       <div class="custombox" id="customBox">
@@ -263,7 +267,9 @@
       <div class="podium" id="podium"></div>
       <div id="topBody"></div>
     </div>
+    </div>
 
+    <div class="view" id="view-short">
     <div class="topsec" id="sec-sf-analytics">
       <div class="toptitle">Short Form</div>
       <div class="topsub">TikTok · YouTube Shorts · Instagram Reels · Snapchat Spotlight</div>
@@ -352,6 +358,7 @@
       </div>
       <div class="sfnote blue"><b>The compilation play:</b> one weekly 60–180s compilation of the week's shorts is TikTok-Rewards-eligible (60s+ earns), builds YouTube WATCH HOURS (Shorts feed views never do), and costs zero new generation. Highest-leverage move on this board.</div>
       <div class="sfnote"><b>Clock running:</b> Feb 1 2027 — YouTube thresholds double to 8,000 watch hours / 20M Shorts views. Crossing before then is half the work.</div>
+    </div>
     </div>
 
   </div></div>
@@ -857,8 +864,35 @@ function checkMilestone() {
 
 function scrollToSec(id) {
   const el = $(id);
-  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 16, behavior: "smooth" });
+  const smooth = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 16, behavior: smooth });
 }
+
+// ---------- view switching (GIFS | SHORT FORM tabs) ----------
+// hash carries the view (#gifs / #shortform): deep links + back/forward work.
+// clicks call setView directly then pushState (no double-run: pushState never
+// fires hashchange); back/forward traversal fires hashchange -> setView.
+const VIEWS = { gifs: "view-gifs", shortform: "view-short" };
+let curView = "gifs";
+function setView(name, navEl) {
+  if (!VIEWS[name]) name = "gifs";
+  curView = name;
+  for (const [k, id] of Object.entries(VIEWS)) $(id).classList.toggle("on", k === name);
+  document.querySelectorAll(".side-nav .navitem").forEach(n => { n.classList.remove("cur"); n.removeAttribute("aria-current"); });
+  if (!navEl) navEl = name === "shortform" ? $("navSfA") : $("navDash");
+  navEl.classList.add("cur");
+  navEl.setAttribute("aria-current", "true");
+  if (name === "shortform" && typeof renderSfChart === "function") renderSfChart();
+}
+function navTo(name, navEl) {
+  setView(name, navEl);
+  if (location.hash !== "#" + name) history.pushState(null, "", "#" + name);
+}
+window.addEventListener("hashchange", () => {
+  const h = location.hash.replace("#", "");
+  const target = VIEWS[h] ? h : "gifs";   // empty/unknown hash (incl. back to the bare URL) = GIFS view
+  if (target !== curView) setView(target);
+});
 
 async function boot() {
   $("tabGiphy").addEventListener("click", () => { state.source = "giphy"; render(); });
@@ -877,17 +911,21 @@ async function boot() {
       },
     });
   }
-  $("navDash").addEventListener("click", () => scrollToSec("sec-dash"));
-  $("navSfA").addEventListener("click", () => scrollToSec("sec-sf-analytics"));
-  $("navShort").addEventListener("click", () => scrollToSec("sec-shortform"));
-  $("navTop").addEventListener("click", () => {
+  $("navDash").addEventListener("click", function () { navTo("gifs", this); scrollToSec("sec-dash"); });
+  $("navSfA").addEventListener("click", function () { navTo("shortform", this); scrollToSec("sec-sf-analytics"); });
+  $("navShort").addEventListener("click", function () { navTo("shortform", this); scrollToSec("sec-shortform"); });
+  $("navTop").addEventListener("click", function () {
+    navTo("gifs", this);
     if (state.source !== "giphy") { state.source = "giphy"; render(); }
     setTimeout(() => scrollToSec("sec-top"), 120);
   });
-  $("navCountries").addEventListener("click", () => {
+  $("navCountries").addEventListener("click", function () {
+    navTo("gifs", this);
     if (state.source !== "klipy") { state.source = "klipy"; render(); }
     setTimeout(() => scrollToSec("sec-top"), 120);
   });
+  { const h = location.hash.replace("#", "");
+    setView(VIEWS[h] ? h : "gifs"); }
   $("dlChart").addEventListener("click", async () => {
     if (!window.htmlToImage) return;
     try {
