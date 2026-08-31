@@ -442,7 +442,7 @@ function sfSeries() {
 function renderSfChart() {
   const wrap = $("sfChartWrap"); if (!wrap) return;
   const pts = sfSeries();
-  $("sfChartSub").textContent = SF_LABEL[SF.plat] + (pts.length ? " · daily views" : " · daily views · awaiting first data pull");
+  $("sfChartSub").textContent = SF_LABEL[SF.plat] + (pts.length ? " · weekly views" : " · weekly views · awaiting first data pull");
   if (!pts.length) {
     wrap.innerHTML = `<div class="sf-empty">No short-form data yet.<br>The stats pull will feed <b>data/shortform-daily.csv</b> (date, platform, views, followers) and this chart fills itself.</div>`;
     return;
